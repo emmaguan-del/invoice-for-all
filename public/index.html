@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Receipt Wallet</title>
+<style>
+/* ===== RESET & VARIABLES ===== */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#3560FF;--blue-light:#00D3F7;--brand-active:#2B38C8;
+  --grad:linear-gradient(135deg,#3560FF,#00D3F7);
+  --grad-h:linear-gradient(180deg,#3560FF,#00D3F7);
+  --text-bold:#101119;--text-default:#3B3C43;--text-subtle:#737380;--text-subtlest:#9B9BAA;--text-inverse:#F7F8F9;
+  --bg-default:#FFFFFF;--bg-sunken:#F7F8F9;--bg-neutral:#EDEFF3;--bg-border:#BBBBC8;--bg-border-subtle:#EDEFF3;--bg-divider:rgba(0,0,0,0.1);
+  --prize:#FFC423;--prize-bg:#FFF1CD;--prize-text:#9C6A05;
+  --success:#00BD64;--success-bg:#D5FBE5;
+  --danger:#F4252D;--danger-bg:#FFDEDE;
+  --fb:#1877F2;--line:#06C755;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;
+  --radius-l:12px;--radius-m:8px;--radius-s:6px;
+}
+html,body{width:100%;height:100%;font-family:var(--font);color:var(--text-default);background:var(--bg-default);overflow:hidden}
+button{font-family:var(--font);border:none;cursor:pointer;background:none;color:inherit}
+button:active{transform:scale(.97)}
+a{color:var(--blue);text-decoration:none}
+
+/* ===== PHONE SHELL ===== */
+.phone-shell{position:relative;width:100vw;height:100vh;height:100dvh;margin:auto;background:var(--bg-default);overflow:hidden;box-shadow:none}
+@media(min-width:421px){
+  body{display:flex;align-items:center;justify-content:center}
+}
+
+/* ===== PAGES ===== */
+.page{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;background:var(--bg-sunken)}
+.page.active{display:flex}
+.page-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* ===== TAB BAR ===== */
+.tab-bar{position:relative;display:flex;align-items:flex-end;justify-content:space-around;height:64px;background:var(--bg-default);border-top:1px solid var(--bg-divider);padding-bottom:8px;z-index:100;flex-shrink:0}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:6px;font-size:10px;font-weight:500;color:var(--text-subtlest);transition:color .2s}
+.tab-item.active{color:var(--blue)}
+.tab-item svg{width:24px;height:24px;fill:currentColor}
+.tab-scan{position:relative;margin-top:-20px}
+.tab-scan .scan-btn{width:56px;height:56px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(53,96,255,.4)}
+.tab-scan .scan-btn svg{width:28px;height:28px;fill:#fff}
+.tab-scan span{margin-top:2px}
+
+/* ===== LOGIN PAGE ===== */
+#login{background:var(--bg-default);z-index:200}
+.login-top{flex:1;background:var(--grad);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 20px;position:relative}
+.login-link-barcode{position:absolute;top:48px;right:20px;font-size:13px;color:rgba(255,255,255,.85);cursor:pointer;text-decoration:underline}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.login-logo svg{width:48px;height:48px}
+.login-title{font-size:26px;font-weight:600;color:#fff;text-align:center;margin-bottom:8px;line-height:1.3}
+.login-subtitle{color:rgba(255,255,255,.85);font-size:14px;margin-bottom:40px;text-align:center;line-height:1.5;max-width:300px}
+.login-bottom{background:#fff;padding:24px;border-radius:20px 20px 0 0;margin-top:-20px;position:relative;z-index:1}
+.login-section{margin-bottom:20px}
+.login-section-title{font-size:16px;font-weight:500;color:var(--text-bold);margin-bottom:12px}
+.carrier-input-group{display:none;margin-bottom:12px}
+.carrier-input-group.show{display:block}
+.carrier-input{width:100%;height:48px;border:1.5px solid var(--bg-border);border-radius:var(--radius-l);padding:0 16px;font-size:16px;font-family:var(--mono);outline:none;transition:border .2s}
+.carrier-input:focus{border-color:var(--blue)}
+.carrier-hint{font-size:12px;color:var(--text-subtle);margin-top:6px}
+.btn-primary{width:100%;height:48px;border-radius:var(--radius-l);background:var(--blue);color:#fff;font-size:16px;font-weight:500}
+.btn-primary:disabled{opacity:.5}
+.btn-google{width:100%;height:52px;border-radius:var(--radius-l);border:1.5px solid var(--bg-border);font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;color:var(--text-bold);background:#fff}
+.btn-google:hover{background:var(--bg-sunken)}
+.btn-google svg{width:22px;height:22px}
+.login-option{width:100%;height:48px;border-radius:var(--radius-l);border:1.5px solid var(--bg-border-subtle);font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;color:var(--text-bold);background:#fff}
+.login-option:hover{background:var(--bg-sunken)}
+.login-option svg{width:22px;height:22px}
+.social-btns{display:flex;gap:10px;margin-bottom:16px}
+.social-btn{flex:1;height:48px;border-radius:var(--radius-l);display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:500;color:#fff}
+.social-btn.fb{background:var(--fb)}
+.social-btn.google{background:#fff;border:1.5px solid var(--bg-border);color:var(--text-bold)}
+.social-btn.line{background:var(--line)}
+.social-btn svg{width:22px;height:22px}
+.skip-link{text-align:center;font-size:14px;color:var(--text-subtle);padding:12px}
+.skip-link span{cursor:pointer;text-decoration:underline}
+
+/* ===== HOME PAGE ===== */
+.home-header{background:var(--grad);padding:16px 16px 0;color:#fff;flex-shrink:0}
+.home-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.home-header-logo{font-size:20px;font-weight:500}
+.home-header-icons{display:flex;gap:12px;align-items:center}
+.home-header-icons svg{width:24px;height:24px;fill:#fff;cursor:pointer}
+.lang-switch{font-size:12px;background:rgba(255,255,255,.2);padding:4px 8px;border-radius:4px;color:#fff;font-weight:500;cursor:pointer}
+.help-btn{font-size:12px;background:rgba(255,255,255,.2);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;cursor:pointer}
+.greeting{font-size:24px;font-weight:500;margin-bottom:4px}
+.greeting-sub{font-size:14px;opacity:.85;margin-bottom:12px}
+.month-picker{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.month-picker svg{width:20px;height:20px;fill:#fff;cursor:pointer;opacity:.8}
+.month-picker span{font-size:16px;font-weight:500}
+.stats-card{background:#fff;border-radius:var(--radius-l);padding:16px;display:flex;margin-bottom:-24px;position:relative;z-index:1;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.stat-item{flex:1;text-align:center}
+.stat-item+.stat-item{border-left:1px solid var(--bg-divider)}
+.stat-value{font-size:24px;font-weight:500;color:var(--text-bold)}
+.stat-label{font-size:12px;color:var(--text-subtle);margin-top:2px}
+.home-body{padding:40px 16px 16px}
+.section-title{font-size:18px;font-weight:500;color:var(--text-bold);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.section-title a{font-size:14px;font-weight:400}
+.chart-card{background:#fff;border-radius:var(--radius-l);padding:16px;margin-bottom:16px;display:flex;gap:16px;align-items:center}
+.pie-chart{width:100px;height:100px;flex-shrink:0}
+.chart-legend{flex:1}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14px}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ===== INVOICE LIST ===== */
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--bg-default);border-bottom:1px solid var(--bg-divider)}
+.toolbar-title{font-size:20px;font-weight:500;color:var(--text-bold)}
+.toolbar svg{width:24px;height:24px;fill:var(--text-subtle)}
+.chip-row{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;background:var(--bg-default);flex-shrink:0}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{padding:6px 16px;border-radius:20px;font-size:14px;font-weight:500;background:var(--bg-neutral);color:var(--text-subtle);white-space:nowrap;flex-shrink:0}
+.chip.active{background:var(--blue);color:#fff}
+.invoice-card{background:#fff;border-radius:var(--radius-l);padding:16px;margin:8px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:box-shadow .2s}
+.invoice-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.invoice-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.invoice-tag{font-size:12px;font-weight:500;background:var(--bg-neutral);color:var(--text-subtle);padding:2px 8px;border-radius:4px}
+.invoice-badge{font-size:12px;font-weight:500;padding:4px 10px;border-radius:6px}
+.badge-pending{background:var(--bg-neutral);color:var(--text-subtle)}
+.badge-won{background:var(--prize-bg);color:var(--prize-text)}
+.badge-lost{background:var(--bg-sunken);color:var(--text-subtlest)}
+.badge-donated{background:#E8F0FE;color:#3560FF}
+.invoice-number{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--text-bold);margin-bottom:4px;letter-spacing:.5px}
+.invoice-shop{font-size:14px;color:var(--text-subtle);margin-bottom:2px}
+.invoice-bottom{display:flex;justify-content:space-between;align-items:center}
+.invoice-date{font-size:12px;color:var(--text-subtlest)}
+.invoice-amount{font-size:18px;font-weight:500;color:var(--text-bold)}
+
+/* ===== SCAN PAGE ===== */
+#scanPage{background:#000;z-index:150}
+.scan-header{display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:48px}
+.scan-header svg{width:24px;height:24px;fill:#fff;cursor:pointer}
+.scan-title{font-size:18px;font-weight:500;color:#fff}
+.scan-header-right{display:flex;gap:16px}
+.scan-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.scan-frame{width:260px;height:260px;position:relative;border:2px solid rgba(255,255,255,.3);border-radius:4px}
+.scan-corner{position:absolute;width:30px;height:30px;border-color:var(--blue);border-style:solid;border-width:0}
+.scan-corner.tl{top:-2px;left:-2px;border-top-width:4px;border-left-width:4px;border-radius:4px 0 0 0}
+.scan-corner.tr{top:-2px;right:-2px;border-top-width:4px;border-right-width:4px;border-radius:0 4px 0 0}
+.scan-corner.bl{bottom:-2px;left:-2px;border-bottom-width:4px;border-left-width:4px;border-radius:0 0 0 4px}
+.scan-corner.br{bottom:-2px;right:-2px;border-bottom-width:4px;border-right-width:4px;border-radius:0 0 4px 0}
+.scan-line{position:absolute;top:0;left:10px;right:10px;height:2px;background:var(--blue);box-shadow:0 0 8px var(--blue);animation:scanMove 2s ease-in-out infinite}
+@keyframes scanMove{0%,100%{top:0}50%{top:calc(100% - 2px)}}
+.scan-hint{color:rgba(255,255,255,.7);font-size:14px;margin-top:24px;text-align:center;max-width:260px}
+.scan-frame.success{border-color:var(--success)}
+.scan-frame.success .scan-corner{border-color:var(--success)}
+.scan-frame.success .scan-line{display:none}
+.scan-check{display:none;position:absolute;inset:0;align-items:center;justify-content:center}
+.scan-frame.success .scan-check{display:flex}
+.scan-check svg{width:64px;height:64px;fill:var(--success)}
+.scan-bottom{padding:16px 24px 32px;display:flex;justify-content:center}
+.btn-outline{height:48px;padding:0 32px;border-radius:var(--radius-l);border:1.5px solid #fff;color:#fff;font-size:16px;font-weight:500;background:transparent}
+
+/* Scan result sheet */
+.scan-result{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px;transform:translateY(100%);transition:transform .4s ease;z-index:10}
+.scan-result.show{transform:translateY(0)}
+.scan-result-title{font-size:18px;font-weight:500;color:var(--success);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.scan-result-title svg{width:24px;height:24px;fill:var(--success)}
+.scan-result-sub{font-size:13px;color:var(--text-subtle);margin-bottom:16px}
+.result-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.result-row .label{color:var(--text-subtle)}
+.result-row .value{color:var(--text-bold);font-weight:500}
+.result-row .value.mono{font-family:var(--mono)}
+.result-items{margin:12px 0;border-top:1px solid var(--bg-divider);padding-top:12px}
+.result-item{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;color:var(--text-default)}
+.result-actions{display:flex;gap:12px;margin-top:16px}
+.result-actions .btn-primary{flex:1}
+.btn-text{font-size:14px;color:var(--text-subtle);padding:12px;font-weight:500}
+
+/* ===== CARRIER PAGE ===== */
+.carrier-header{background:var(--grad);padding:48px 16px 32px;color:#fff}
+.carrier-header-title{font-size:20px;font-weight:500;margin-bottom:4px}
+.carrier-header-desc{font-size:13px;opacity:.85;line-height:1.4}
+.carrier-card{background:#fff;border-radius:16px;margin:16px;padding:24px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.carrier-number{font-family:var(--mono);font-size:24px;font-weight:500;color:var(--text-bold);margin-bottom:16px;letter-spacing:1px}
+.carrier-label{font-size:12px;color:var(--text-subtle);margin-bottom:8px}
+.barcode-svg{width:100%;max-width:280px;height:60px;margin:0 auto 16px}
+.carrier-toggle{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:var(--text-subtle);margin-bottom:12px}
+.toggle-switch{width:44px;height:24px;background:var(--bg-border);border-radius:12px;position:relative;cursor:pointer;transition:background .2s}
+.toggle-switch.on{background:var(--blue)}
+.toggle-switch::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-switch.on::after{left:22px}
+.carrier-tabs{display:flex;margin:0 16px;background:var(--bg-neutral);border-radius:var(--radius-m);overflow:hidden}
+.carrier-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:500;color:var(--text-subtle);cursor:pointer}
+.carrier-tab.active{background:#fff;color:var(--blue);border-radius:var(--radius-m);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.carrier-sync{padding:16px;text-align:center;font-size:12px;color:var(--text-subtlest)}
+
+/* ===== ACCOUNT PAGE ===== */
+.account-header{background:var(--grad);padding:48px 16px 32px;color:#fff;text-align:center}
+.avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;margin:0 auto 8px;color:#fff}
+.account-name{font-size:20px;font-weight:500;margin-bottom:4px}
+.account-carrier{font-size:14px;opacity:.8}
+.lottery-card{background:#fff;border-radius:var(--radius-l);padding:20px;margin:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.lottery-title{font-size:18px;font-weight:500;color:var(--text-bold);margin-bottom:4px}
+.lottery-desc{font-size:13px;color:var(--text-subtle);margin-bottom:8px;line-height:1.4}
+.lottery-period{font-size:14px;color:var(--text-subtle);margin-bottom:16px}
+.menu-list{margin:8px 16px}
+.menu-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-radius:var(--radius-l);margin-bottom:8px;font-size:16px;color:var(--text-default)}
+.menu-item svg{width:22px;height:22px;fill:var(--text-subtle)}
+.menu-item .arrow{margin-left:auto;color:var(--text-subtlest)}
+
+/* ===== LOTTERY MODAL ===== */
+.lottery-modal{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.lottery-modal.show{display:flex}
+.lottery-scanning{text-align:center;color:#fff}
+.lottery-scanning .scan-num{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--blue-light,#00D3F7);margin:16px 0;min-height:36px}
+.lottery-progress{width:200px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;margin:0 auto}
+.lottery-progress-bar{height:100%;background:var(--grad);border-radius:2px;transition:width .3s}
+.lottery-result{display:none;background:#fff;border-radius:20px;padding:32px 24px;text-align:center;width:100%;max-width:340px;max-height:80vh;overflow-y:auto}
+.lottery-result.show{display:block}
+.lottery-result-icon{width:64px;height:64px;background:var(--success-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.lottery-result-icon svg{width:32px;height:32px;fill:var(--success)}
+.lottery-result-icon.lost-icon{background:var(--bg-neutral)}
+.lottery-result-icon.lost-icon svg{fill:var(--text-subtlest)}
+.lottery-result h2{font-size:24px;font-weight:500;color:var(--text-bold);margin-bottom:8px}
+.lottery-result .win-count{font-size:16px;color:var(--text-subtle);margin-bottom:8px}
+.lottery-result .win-amount{font-size:36px;font-weight:500;color:var(--prize-text);margin-bottom:16px}
+.lottery-win-card{background:var(--prize-bg);border-radius:var(--radius-m);padding:12px;margin-bottom:8px;text-align:left}
+.lottery-win-card .wnum{font-family:var(--mono);font-size:14px;color:var(--prize-text);font-weight:500}
+.lottery-win-card .wshop{font-size:12px;color:var(--prize-text);opacity:.8}
+.lottery-win-card .wamt{font-size:16px;font-weight:500;color:var(--prize-text);text-align:right}
+.claim-link{font-size:13px;color:var(--blue);text-decoration:underline;cursor:pointer;display:block;margin-top:8px;text-align:center}
+.lottery-lost{font-size:14px;color:var(--text-subtlest);margin:12px 0}
+.btn-close-lottery{width:100%;height:48px;border-radius:var(--radius-l);background:var(--blue);color:#fff;font-size:16px;font-weight:500;margin-top:8px}
+
+/* ===== INFO MODAL (What is this?) ===== */
+.info-modal{position:absolute;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.info-modal.show{display:flex}
+.info-content{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:340px;max-height:80vh;overflow-y:auto}
+.info-content h2{font-size:20px;font-weight:600;color:var(--text-bold);margin-bottom:16px;text-align:center}
+.info-step{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start}
+.info-step-num{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.info-step-text{font-size:14px;color:var(--text-default);line-height:1.5;padding-top:3px}
+.prize-table{width:100%;border-collapse:collapse;margin:16px 0 8px}
+.prize-table th{font-size:12px;color:var(--text-subtle);text-align:left;padding:6px 0;border-bottom:1px solid var(--bg-divider)}
+.prize-table td{font-size:14px;padding:8px 0;border-bottom:1px solid var(--bg-border-subtle)}
+.prize-table td:last-child{text-align:right;font-weight:500;color:var(--prize-text);font-family:var(--mono)}
+.btn-close-info{width:100%;height:44px;border-radius:var(--radius-l);background:var(--blue);color:#fff;font-size:15px;font-weight:500;margin-top:8px}
+
+/* ===== SHIMMER ===== */
+.shimmer{background:linear-gradient(90deg,var(--bg-neutral) 25%,var(--bg-sunken) 50%,var(--bg-neutral) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-m)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ===== TRANSITIONS ===== */
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== ONBOARDING ===== */
+#onboarding{position:absolute;inset:0;z-index:500;display:flex;flex-direction:column;background:linear-gradient(180deg,#3560FF,#00D3F7);transition:opacity .6s ease}
+#onboarding.hidden{opacity:0;pointer-events:none}
+
+.ob-top{flex-shrink:0;padding:48px 20px 12px;display:flex;align-items:center;gap:12px}
+.ob-angel{font-size:32px;line-height:1}
+.ob-progress{flex:1;height:3px;background:rgba(255,255,255,.25);border-radius:2px;overflow:hidden}
+.ob-progress-fill{height:100%;background:#fff;border-radius:2px;transition:width .4s ease}
+.ob-step-label{font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap}
+
+.ob-chat{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 12px;display:flex;flex-direction:column;gap:10px}
+
+.ob-bubble{max-width:82%;padding:12px 16px;font-size:15px;line-height:1.55;opacity:0;transform:translateY(12px);animation:obBubbleIn .3s ease forwards;word-break:break-word}
+.ob-bubble b,.ob-bubble strong{font-weight:600}
+.ob-bubble.system{align-self:flex-start;background:#fff;color:var(--text-default);border-radius:4px 18px 18px 18px}
+.ob-bubble.user{align-self:flex-end;background:var(--brand-active,#2B38C8);color:#fff;border-radius:18px 4px 18px 18px}
+@keyframes obBubbleIn{to{opacity:1;transform:translateY(0)}}
+
+.ob-typing{align-self:flex-start;background:#fff;border-radius:4px 18px 18px 18px;padding:12px 20px;display:flex;gap:5px}
+.ob-typing span{width:8px;height:8px;border-radius:50%;background:var(--text-subtlest);animation:obDot 1s infinite}
+.ob-typing span:nth-child(2){animation-delay:.15s}
+.ob-typing span:nth-child(3){animation-delay:.3s}
+@keyframes obDot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+.ob-actions{flex-shrink:0;padding:12px 16px 24px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;animation:obBubbleIn .3s ease forwards;opacity:0}
+.ob-actions.visible{opacity:1;transform:translateY(0)}
+
+.ob-btn{padding:10px 20px;border-radius:24px;font-size:15px;font-weight:500;background:rgba(255,255,255,.95);color:var(--blue);border:none;cursor:pointer;transition:transform .15s,background .15s}
+.ob-btn:active{transform:scale(.95)}
+.ob-btn.primary{background:#fff;font-weight:600}
+.ob-btn.secondary{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4)}
+
+.ob-login-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px;margin:0 auto}
+.ob-login-btn{width:100%;height:50px;border-radius:var(--radius-l);font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:none;transition:transform .15s}
+.ob-login-btn:active{transform:scale(.97)}
+.ob-login-btn.google{background:#fff;color:var(--text-bold);border:1.5px solid var(--bg-border)}
+.ob-login-btn.facebook{background:#fff;color:var(--fb);border:1.5px solid var(--bg-border)}
+.ob-login-btn.line-btn{background:#fff;color:var(--line);border:1.5px solid var(--bg-border)}
+
+.ob-input-row{display:flex;gap:8px;width:100%;max-width:300px;margin:0 auto}
+.ob-input{flex:1;height:48px;border-radius:var(--radius-l);border:none;padding:0 16px;font-size:16px;outline:none;font-family:var(--font)}
+
+.ob-faceid{background:#fff;border-radius:16px;padding:24px 20px;text-align:center;width:100%;max-width:280px;margin:0 auto}
+.ob-faceid h3{font-size:17px;font-weight:600;color:var(--text-bold);margin-bottom:6px}
+.ob-faceid p{font-size:14px;color:var(--text-subtle);margin-bottom:16px;line-height:1.4}
+.ob-faceid-btns{display:flex;gap:10px}
+.ob-faceid-btns button{flex:1;height:44px;border-radius:var(--radius-l);font-size:15px;font-weight:500;cursor:pointer;border:none}
+.ob-faceid-btns .enable{background:var(--blue);color:#fff}
+.ob-faceid-btns .skip{background:var(--bg-neutral);color:var(--text-subtle)}
+
+.ob-scan-btn{width:100%;max-width:280px;height:56px;border-radius:var(--radius-l);background:#fff;color:var(--blue);font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;cursor:pointer;border:none}
+
+/* Onboarding mock scan overlay */
+.ob-scan-overlay{position:absolute;inset:0;background:#000;z-index:510;display:none;flex-direction:column}
+.ob-scan-overlay.show{display:flex}
+.ob-scan-overlay .scan-area{flex:1}
+
+/* Onboarding invoice card */
+.ob-invoice-card{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:300px;margin:0 auto;text-align:left}
+.ob-invoice-card .hdr{font-size:16px;font-weight:600;color:var(--success);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ob-invoice-card .row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0;color:var(--text-default)}
+.ob-invoice-card .row .lbl{color:var(--text-subtle)}
+.ob-invoice-card .items{border-top:1px solid var(--bg-divider);margin:8px 0;padding-top:8px}
+.ob-invoice-card .item{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;color:var(--text-default)}
+.ob-invoice-card .total{border-top:1px solid var(--bg-divider);padding-top:8px;display:flex;justify-content:space-between;font-size:16px;font-weight:600;color:var(--text-bold)}
+
+/* Confetti */
+.ob-confetti{position:absolute;inset:0;pointer-events:none;z-index:520;overflow:hidden}
+.ob-confetti span{position:absolute;width:10px;height:10px;border-radius:50%;animation:obConfettiFall 2.5s ease-in forwards}
+@keyframes obConfettiFall{0%{opacity:1;transform:translateY(-20px) rotate(0deg)}100%{opacity:0;transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<div class="phone-shell" id="app">
+
+  <!-- ========== ONBOARDING ========== -->
+  <div id="onboarding" style="display:none">
+    <div class="ob-top">
+      <div class="ob-angel">🍀</div>
+      <div class="ob-progress"><div class="ob-progress-fill" id="obProgressFill" style="width:0%"></div></div>
+      <div class="ob-step-label" id="obStepLabel"></div>
+    </div>
+    <div class="ob-chat" id="obChat"></div>
+    <div class="ob-actions" id="obActions"></div>
+  </div>
+
+  <!-- Onboarding scan overlay -->
+  <div class="ob-scan-overlay" id="obScanOverlay">
+    <div class="scan-header">
+      <svg viewBox="0 0 24 24" onclick="obCloseScan()"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="#fff"/></svg>
+      <div class="scan-title" style="color:#fff">掃描發票</div>
+      <div></div>
+    </div>
+    <div class="scan-area" onclick="obTriggerScan()">
+      <div class="scan-frame" id="obScanFrame">
+        <div class="scan-corner tl"></div>
+        <div class="scan-corner tr"></div>
+        <div class="scan-corner bl"></div>
+        <div class="scan-corner br"></div>
+        <div class="scan-line" id="obScanLine"></div>
+        <div class="scan-check"><svg viewBox="0 0 64 64"><path d="M16 33l12 12 20-22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="scan-hint">將發票的條碼對準框框</div>
+    </div>
+  </div>
+
+  <!-- ========== LOGIN PAGE ========== -->
+  <div class="page active" id="login">
+    <div class="login-top">
+      <span class="login-link-barcode" onclick="toggleCarrierInput()" data-i18n="linkBarcode">Already have a barcode? Link it</span>
+      <div class="login-logo">
+        <svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="32" rx="4" fill="none" stroke="#fff" stroke-width="3"/><line x1="14" y1="18" x2="34" y2="18" stroke="#fff" stroke-width="2"/><line x1="14" y1="24" x2="28" y2="24" stroke="#fff" stroke-width="2"/><line x1="14" y1="30" x2="22" y2="30" stroke="#fff" stroke-width="2"/><circle cx="34" cy="32" r="6" fill="#FFC423"/><path d="M31.5 32l2 2 3-3.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="login-title" data-i18n="loginTitle">Scan receipts.<br>Win cash prizes.</div>
+      <div class="login-subtitle" data-i18n="loginSubtitle">Taiwan government runs a national lottery — every receipt is a chance to win up to NT$10,000,000!</div>
+    </div>
+    <div class="login-bottom">
+      <!-- Carrier input (hidden by default, shown when "Already have a barcode?" is clicked) -->
+      <div class="carrier-input-group" id="carrierInputGroup">
+        <div class="login-section-title" data-i18n="loginCarrierTitle">Link your mobile barcode</div>
+        <input type="text" class="carrier-input" id="carrierCode" placeholder="/ABC-1234" maxlength="10">
+        <div class="carrier-hint" data-i18n="carrierHint">Format: / followed by 7 alphanumeric characters</div>
+        <button class="btn-primary" style="margin-top:12px" onclick="doLogin()" data-i18n="bindBtn">Link Barcode</button>
+        <div style="height:16px"></div>
+      </div>
+      <!-- Primary CTA: Google -->
+      <button class="btn-google" onclick="doLogin()">
+        <svg viewBox="0 0 22 22"><path d="M21.35 11.13h-9.18v3.37h5.28c-.23 1.2-.93 2.21-1.97 2.89l3.18 2.47c1.86-1.71 2.93-4.24 2.93-7.24 0-.62-.06-1.22-.17-1.79z" fill="#4285F4"/><path d="M12.17 22c2.7 0 4.96-.9 6.62-2.42l-3.18-2.47c-.9.6-2.04.95-3.44.95-2.65 0-4.89-1.79-5.69-4.19l-3.27 2.53A10.97 10.97 0 0012.17 22z" fill="#34A853"/><path d="M6.48 13.87a6.62 6.62 0 010-4.24l-3.27-2.53a10.97 10.97 0 000 9.3l3.27-2.53z" fill="#FBBC05"/><path d="M12.17 4.44c1.5 0 2.84.51 3.9 1.52l2.92-2.92C17.12 1.31 14.86.25 12.17.25A10.97 10.97 0 003.21 5.1l3.27 2.53c.8-2.4 3.04-4.19 5.69-4.19z" fill="#EA4335"/></svg>
+        <span data-i18n="googleBtn">Continue with Google</span>
+      </button>
+      <!-- Secondary: Facebook & LINE -->
+      <div class="social-btns">
+        <button class="login-option" onclick="doLogin()" style="flex:1">
+          <svg viewBox="0 0 22 22"><path d="M22 11a11 11 0 10-12.72 10.87v-7.69H6.5V11h2.78V8.58c0-2.74 1.63-4.26 4.13-4.26 1.2 0 2.45.21 2.45.21v2.69h-1.38c-1.36 0-1.78.84-1.78 1.71V11h3.03l-.48 3.18h-2.55v7.69A11 11 0 0022 11z" fill="#1877F2"/></svg>
+          <span data-i18n="fbBtn">Facebook</span>
+        </button>
+        <button class="login-option" onclick="doLogin()" style="flex:1">
+          <svg viewBox="0 0 22 22"><path d="M22 10.26c0-5.09-5.1-9.23-11.37-9.23S-.74 5.17-.74 10.26c0 4.56 4.04 8.38 9.5 9.1.37.08.87.24 1 .56.11.28.07.73.04 1.01 0 0-.13.8-.16.97-.05.29-.23 1.14 1-.62s6.8-4 9.28-6.85c1.71-1.88 2.54-3.79 2.54-6.17z" fill="#06C755"/></svg>
+          <span data-i18n="lineBtn">LINE</span>
+        </button>
+      </div>
+      <div class="skip-link"><span onclick="doLogin()" data-i18n="skipLink">Skip for now</span></div>
+    </div>
+  </div>
+
+  <!-- ========== HOME PAGE (Tab 1) ========== -->
+  <div class="page" id="homePage">
+    <div class="home-header">
+      <div class="home-header-top">
+        <div class="home-header-logo" data-i18n="appName">Receipt Wallet</div>
+        <div class="home-header-icons">
+          <span class="lang-switch" onclick="toggleLang()" id="langBtn">中</span>
+          <span class="help-btn" onclick="openInfo()">?</span>
+          <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 00.12-.64l-2-3.46a.5.5 0 00-.61-.22l-2.49 1a7.04 7.04 0 00-1.69-.98l-.38-2.65A.49.49 0 0014 2h-4a.49.49 0 00-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.49.49 0 00-.61.22l-2 3.46a.49.49 0 00.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65a.5.5 0 00-.12.64l2 3.46a.5.5 0 00.61.22l2.49-1c.52.39 1.08.73 1.69.98l.38 2.65c.05.24.26.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1a.49.49 0 00.61-.22l2-3.46a.5.5 0 00-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1115.5 12 3.5 3.5 0 0112 15.5z"/></svg>
+        </div>
+      </div>
+      <div class="greeting" data-i18n="greeting">Hi! Ready to win?</div>
+      <div class="greeting-sub" data-i18n="greetingSub">You have 12 receipts to check for prizes</div>
+      <div class="month-picker">
+        <svg viewBox="0 0 20 20" onclick="changeMonth(-1)"><path d="M13 4l-6 6 6 6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        <span id="monthLabel">Feb 2026</span>
+        <svg viewBox="0 0 20 20" onclick="changeMonth(1)"><path d="M7 4l6 6-6 6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="stats-card" style="flex-direction:column;gap:6px;padding:16px">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span class="stat-value" style="font-size:36px">23</span>
+          <span class="stat-label" style="font-size:14px" data-i18n="statInvoicesLabel">張發票已存入</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-subtle);line-height:1.5" id="statBoostHint">
+          再存入 <b style="color:var(--blue)">7 張</b>，本期中獎機率可望提升 <b style="color:var(--blue)">15%</b> ↑
+        </div>
+        <div style="background:var(--bg-sunken);border-radius:8px;height:6px;margin-top:4px;overflow:hidden">
+          <div style="background:linear-gradient(90deg,#3560FF,#00D3F7);width:77%;height:100%;border-radius:8px"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text-subtlest);text-align:right" data-i18n="statProgress">本期進度 23 / 30 張</div>
+
+        <!-- 載具條碼區塊 -->
+        <div style="margin-top:12px;border-top:1px solid var(--bg-border-subtle);padding-top:12px">
+          <!-- 載具條碼區 -->
+          <!-- 未設定狀態 -->
+          <div id="carrierUnset">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-bold)" data-i18n="carrierTitle">手機載具條碼</div>
+              <span style="background:#FFF1CD;color:#9C6A05;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px" data-i18n="carrierBoostBadge">中獎機率 +3倍</span>
+            </div>
+            <!-- 模糊預覽條碼 + 設定提示疊加 -->
+            <div style="position:relative;border-radius:10px;overflow:hidden;cursor:pointer" onclick="showCarrierSetup()">
+              <svg viewBox="0 0 280 56" style="width:100%;height:56px;filter:blur(1.5px);opacity:0.3">
+                <rect width="280" height="56" fill="#fff"/>
+                <g fill="#101119">
+                  <rect x="4"  y="2" width="3"  height="52"/><rect x="10" y="2" width="6"  height="52"/>
+                  <rect x="19" y="2" width="2"  height="52"/><rect x="24" y="2" width="5"  height="52"/>
+                  <rect x="32" y="2" width="3"  height="52"/><rect x="38" y="2" width="2"  height="52"/>
+                  <rect x="43" y="2" width="6"  height="52"/><rect x="52" y="2" width="3"  height="52"/>
+                  <rect x="58" y="2" width="2"  height="52"/><rect x="63" y="2" width="5"  height="52"/>
+                  <rect x="71" y="2" width="3"  height="52"/><rect x="77" y="2" width="6"  height="52"/>
+                  <rect x="86" y="2" width="2"  height="52"/><rect x="91" y="2" width="3"  height="52"/>
+                  <rect x="97" y="2" width="5"  height="52"/><rect x="105" y="2" width="2" height="52"/>
+                  <rect x="110" y="2" width="6" height="52"/><rect x="119" y="2" width="3" height="52"/>
+                  <rect x="125" y="2" width="2" height="52"/><rect x="130" y="2" width="5" height="52"/>
+                  <rect x="138" y="2" width="3" height="52"/><rect x="144" y="2" width="6" height="52"/>
+                  <rect x="153" y="2" width="2" height="52"/><rect x="158" y="2" width="3" height="52"/>
+                  <rect x="164" y="2" width="5" height="52"/><rect x="172" y="2" width="2" height="52"/>
+                  <rect x="177" y="2" width="6" height="52"/><rect x="186" y="2" width="3" height="52"/>
+                  <rect x="192" y="2" width="2" height="52"/><rect x="197" y="2" width="5" height="52"/>
+                  <rect x="205" y="2" width="3" height="52"/><rect x="211" y="2" width="6" height="52"/>
+                  <rect x="220" y="2" width="2" height="52"/><rect x="225" y="2" width="3" height="52"/>
+                  <rect x="231" y="2" width="5" height="52"/><rect x="239" y="2" width="2" height="52"/>
+                  <rect x="244" y="2" width="6" height="52"/><rect x="253" y="2" width="3" height="52"/>
+                  <rect x="259" y="2" width="2" height="52"/><rect x="264" y="2" width="5" height="52"/>
+                  <rect x="272" y="2" width="3" height="52"/>
+                </g>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.6)">
+                <div style="text-align:center">
+                  <div style="font-size:13px;font-weight:600;color:#3560FF" data-i18n="carrierSetupCTA">點此設定載具條碼</div>
+                  <div style="font-size:11px;color:#737380;margin-top:2px" data-i18n="carrierSetupSub">設定後可直接在這裡顯示</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 已設定狀態（申請完成後顯示） -->
+          <div id="carrierSet" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:13px;font-weight:600;color:var(--text-bold)" data-i18n="carrierTitle">手機載具條碼</div>
+              <button onclick="showBarcodeFullscreen()" style="background:none;border:none;font-size:11px;color:#3560FF;cursor:pointer;font-weight:500" data-i18n="carrierFullscreen">全螢幕 ↗</button>
+            </div>
+            <!-- 直接顯示條碼 -->
+            <div style="background:#fff;border:1px solid #EDEFF3;border-radius:10px;padding:12px;cursor:pointer" onclick="showBarcodeFullscreen()">
+              <svg viewBox="0 0 280 56" style="width:100%;height:56px">
+                <rect width="280" height="56" fill="#fff"/>
+                <g fill="#101119">
+                  <rect x="4"  y="2" width="3"  height="52"/><rect x="10" y="2" width="6"  height="52"/>
+                  <rect x="19" y="2" width="2"  height="52"/><rect x="24" y="2" width="5"  height="52"/>
+                  <rect x="32" y="2" width="3"  height="52"/><rect x="38" y="2" width="2"  height="52"/>
+                  <rect x="43" y="2" width="6"  height="52"/><rect x="52" y="2" width="3"  height="52"/>
+                  <rect x="58" y="2" width="2"  height="52"/><rect x="63" y="2" width="5"  height="52"/>
+                  <rect x="71" y="2" width="3"  height="52"/><rect x="77" y="2" width="6"  height="52"/>
+                  <rect x="86" y="2" width="2"  height="52"/><rect x="91" y="2" width="3"  height="52"/>
+                  <rect x="97" y="2" width="5"  height="52"/><rect x="105" y="2" width="2" height="52"/>
+                  <rect x="110" y="2" width="6" height="52"/><rect x="119" y="2" width="3" height="52"/>
+                  <rect x="125" y="2" width="2" height="52"/><rect x="130" y="2" width="5" height="52"/>
+                  <rect x="138" y="2" width="3" height="52"/><rect x="144" y="2" width="6" height="52"/>
+                  <rect x="153" y="2" width="2" height="52"/><rect x="158" y="2" width="3" height="52"/>
+                  <rect x="164" y="2" width="5" height="52"/><rect x="172" y="2" width="2" height="52"/>
+                  <rect x="177" y="2" width="6" height="52"/><rect x="186" y="2" width="3" height="52"/>
+                  <rect x="192" y="2" width="2" height="52"/><rect x="197" y="2" width="5" height="52"/>
+                  <rect x="205" y="2" width="3" height="52"/><rect x="211" y="2" width="6" height="52"/>
+                  <rect x="220" y="2" width="2" height="52"/><rect x="225" y="2" width="3" height="52"/>
+                  <rect x="231" y="2" width="5" height="52"/><rect x="239" y="2" width="2" height="52"/>
+                  <rect x="244" y="2" width="6" height="52"/><rect x="253" y="2" width="3" height="52"/>
+                  <rect x="259" y="2" width="2" height="52"/><rect x="264" y="2" width="5" height="52"/>
+                  <rect x="272" y="2" width="3" height="52"/>
+                </g>
+              </svg>
+              <div style="text-align:center;font-family:monospace;font-size:12px;color:#737380;margin-top:6px" data-i18n="carrierBarcodeLabel">發票存摺 手機條碼：/ABC-1234</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="page-scroll home-body">
+      <div class="section-title" data-i18n="analysisTitle">Spending Analysis</div>
+      <div class="chart-card" style="align-items:flex-start;gap:12px">
+        <!-- 左：圓餅圖 + 分類 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0">
+          <svg class="pie-chart" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="16" fill="none" stroke="#EDEFF3" stroke-width="3.5"/>
+            <circle cx="18" cy="18" r="16" fill="none" stroke="#FF8C42" stroke-width="3.5" stroke-dasharray="35 65" stroke-dashoffset="25"/>
+            <circle cx="18" cy="18" r="16" fill="none" stroke="#3560FF" stroke-width="3.5" stroke-dasharray="28 72" stroke-dashoffset="90"/>
+            <circle cx="18" cy="18" r="16" fill="none" stroke="#00D3F7" stroke-width="3.5" stroke-dasharray="18 82" stroke-dashoffset="62"/>
+            <circle cx="18" cy="18" r="16" fill="none" stroke="#737380" stroke-width="3.5" stroke-dasharray="19 81" stroke-dashoffset="44"/>
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="legend-item"><span class="legend-dot" style="background:#FF8C42"></span><span data-i18n="catFood">餐飲</span>&nbsp;35%</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#3560FF"></span><span data-i18n="catShop">購物</span>&nbsp;28%</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#00D3F7"></span><span data-i18n="catTransport">交通</span>&nbsp;18%</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#737380"></span><span data-i18n="catOther">其他</span>&nbsp;19%</div>
+          </div>
+        </div>
+        <!-- 右：代辦清單 -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-bold);margin-bottom:2px" data-i18n="todoTitle">🎯 提升中獎機率</div>
+          <div style="background:var(--bg-sunken);border-radius:10px;padding:10px 12px">
+            <div style="font-size:12px;font-weight:600;color:var(--text-bold);margin-bottom:2px" data-i18n="todoBankTitle">綁定銀行帳號</div>
+            <div style="font-size:11px;color:var(--text-subtle)" id="todoBankSub">中獎可直接入帳 <b style="color:var(--blue)">+方便</b></div>
+            <button style="margin-top:6px;font-size:11px;background:var(--bg-border-subtle);color:var(--text-subtle);border:none;border-radius:6px;padding:4px 10px;font-weight:600;cursor:pointer" data-i18n="todoLater">稍後設定</button>
+          </div>
+          <div style="background:var(--bg-sunken);border-radius:10px;padding:10px 12px">
+            <div style="font-size:12px;font-weight:600;color:var(--text-bold);margin-bottom:2px" data-i18n="todoCarrierTitle">載具歸戶</div>
+            <div style="font-size:11px;color:var(--text-subtle)" id="todoCarrierSub">雲端發票獎 <b style="color:var(--blue)">+2次機會</b></div>
+            <button style="margin-top:6px;font-size:11px;background:var(--bg-border-subtle);color:var(--text-subtle);border:none;border-radius:6px;padding:4px 10px;font-weight:600;cursor:pointer" data-i18n="todoLater">稍後設定</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-title"><span data-i18n="recentInvoices">Recent Receipts</span><a href="#" onclick="switchTab(1);return false" data-i18n="viewAll">View All</a></div>
+      <div id="recentInvoices"></div>
+      <div style="height:24px"></div>
+    </div>
+    <div class="tab-bar" id="tabBar"></div>
+  </div>
+
+  <!-- ========== INVOICE LIST PAGE (Tab 2) ========== -->
+  <div class="page" id="invoicePage">
+    <div class="toolbar">
+      <div class="toolbar-title" data-i18n="myInvoices">My Receipts</div>
+      <svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>
+    </div>
+    <div class="chip-row" id="chipRow"></div>
+    <div class="page-scroll" id="invoiceList"></div>
+    <div class="tab-bar"></div>
+  </div>
+
+  <!-- ========== SCAN PAGE (Tab 3) ========== -->
+  <div class="page" id="scanPage">
+    <div class="scan-header">
+      <svg viewBox="0 0 24 24" onclick="closeScan()"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      <div class="scan-title" data-i18n="scanInvoice">Scan Receipt</div>
+      <div class="scan-header-right">
+        <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.14v7.72c1.48-.73 2.5-2.25 2.5-3.86zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77 0-4.28-2.99-7.86-7-8.77z"/></svg>
+      </div>
+    </div>
+    <div class="scan-area" onclick="triggerScan()">
+      <div class="scan-frame" id="scanFrame">
+        <div class="scan-corner tl"></div>
+        <div class="scan-corner tr"></div>
+        <div class="scan-corner bl"></div>
+        <div class="scan-corner br"></div>
+        <div class="scan-line" id="scanLine"></div>
+        <div class="scan-check"><svg viewBox="0 0 64 64"><path d="M16 33l12 12 20-22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="scan-hint" data-i18n="scanHint">Scan the barcode or QR code on your receipt</div>
+    </div>
+    <div class="scan-bottom">
+      <button class="btn-outline" data-i18n="manualInput">Manual Entry</button>
+    </div>
+    <div class="scan-result" id="scanResult">
+      <div class="scan-result-title">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span data-i18n="scanSuccess">Receipt saved!</span>
+      </div>
+      <div class="scan-result-sub" data-i18n="scanSuccessSub">We'll check this in the next prize draw</div>
+      <div class="result-row"><span class="label" data-i18n="invoiceNum">Receipt No.</span><span class="value mono">GH-98765432</span></div>
+      <div class="result-row"><span class="label" data-i18n="dateLabel">Date</span><span class="value">2026/02/28</span></div>
+      <div class="result-row"><span class="label" data-i18n="shopLabel">Shop</span><span class="value">7-ELEVEN Xinyi</span></div>
+      <div class="result-row"><span class="label" data-i18n="amountLabel">Amount</span><span class="value">$186</span></div>
+      <div class="result-items">
+        <div class="result-item"><span>Latte (L)</span><span>$65</span></div>
+        <div class="result-item"><span>Salmon Onigiri</span><span>$35</span></div>
+        <div class="result-item"><span>Green Tea</span><span>$25</span></div>
+        <div class="result-item"><span>Slurpee Cola</span><span>$39</span></div>
+        <div class="result-item"><span>Oden Radish</span><span>$22</span></div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-text" onclick="closeScanResult()" data-i18n="cancelBtn">Cancel</button>
+        <button class="btn-primary" onclick="saveScan()" data-i18n="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== WALLET PAGE (Tab 4) ========== -->
+  <div class="page" id="carrierPage">
+    <div class="carrier-header">
+      <div class="carrier-header-title" data-i18n="eCarrier">Receipt Barcode Wallet</div>
+      <div class="carrier-header-desc" data-i18n="eCarrierDesc">Show this barcode at checkout to automatically collect receipts</div>
+    </div>
+    <div class="page-scroll">
+      <div class="carrier-card">
+        <div class="carrier-label" data-i18n="barcodeLabel">Your unique government-issued barcode</div>
+        <div class="carrier-number">/ABC-1234</div>
+        <svg class="barcode-svg" viewBox="0 0 280 60" id="barcodeSvg"></svg>
+        <div class="carrier-toggle">
+          <span data-i18n="brightenScreen">Brighten Screen</span>
+          <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:8px" data-i18n="setDonation">Donate Prize</button>
+      </div>
+      <div class="carrier-tabs">
+        <div class="carrier-tab active" data-i18n="tabCarrier">Barcode</div>
+        <div class="carrier-tab" data-i18n="tabDonation">Donations</div>
+      </div>
+      <div class="carrier-sync" data-i18n="lastSync">Last sync: 2026/02/28 14:30</div>
+    </div>
+    <div class="tab-bar"></div>
+  </div>
+
+  <!-- ========== ACCOUNT PAGE (Tab 5) ========== -->
+  <div class="page" id="accountPage">
+    <div class="account-header">
+      <div class="avatar">E</div>
+      <div class="account-name">Emma</div>
+      <div class="account-carrier">/ABC-1234</div>
+    </div>
+    <div class="page-scroll">
+      <div class="lottery-card">
+        <div class="lottery-title" data-i18n="lotteryTitle">Prize Lottery</div>
+        <div class="lottery-desc" data-i18n="lotteryDesc">Taiwan government holds a bi-monthly prize draw. Check if your receipts won!</div>
+        <div class="lottery-period" data-i18n="lotteryPeriod">Jan-Feb 2026 Draw</div>
+        <button class="btn-primary" onclick="startLottery()" data-i18n="checkNow">Check My Prizes</button>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span data-i18n="menuHistory">Prize History</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V6h16v12zM4 0h16v2H4zm0 22h16v2H4z"/></svg>
+          <span data-i18n="menuCarrier">Linked Receipts</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.26.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
+          <span data-i18n="menuSettings">Settings</span>
+          <span class="arrow">›</span>
+        </div>
+        <div class="menu-item">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span data-i18n="menuAbout">About</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+      <div style="height:24px"></div>
+    </div>
+    <div class="tab-bar"></div>
+  </div>
+
+  <!-- ========== LOTTERY MODAL ========== -->
+  <div class="lottery-modal" id="lotteryModal">
+    <div class="lottery-scanning" id="lotteryScanning">
+      <div style="font-size:18px;font-weight:500;color:#fff" data-i18n="lotteryChecking">Checking your receipts...</div>
+      <div class="scan-num" id="lotteryScanNum"></div>
+      <div class="lottery-progress"><div class="lottery-progress-bar" id="lotteryBar"></div></div>
+    </div>
+    <div class="lottery-result" id="lotteryResult">
+      <div class="lottery-result-icon" id="lotteryResultIcon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+      <h2 data-i18n="lotteryDone" id="lotteryResultTitle">Congratulations!</h2>
+      <div class="win-count" data-i18n="lotteryWinCount" id="lotteryWinCountEl">2 of your receipts won prizes totaling NT$400</div>
+      <div class="win-amount" id="lotteryWinAmount">NT$400</div>
+      <div id="lotteryWinCards"></div>
+      <div class="lottery-lost" data-i18n="lotteryLost" id="lotteryLostEl">21 receipts — no prize this time</div>
+      <button class="btn-close-lottery" onclick="closeLottery()" data-i18n="closeBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- ========== INFO MODAL (What is this?) ========== -->
+  <div class="info-modal" id="infoModal">
+    <div class="info-content">
+      <h2 data-i18n="infoTitle">What is this?</h2>
+      <div class="info-step">
+        <div class="info-step-num">1</div>
+        <div class="info-step-text" data-i18n="infoStep1">Every receipt in Taiwan is a lottery ticket</div>
+      </div>
+      <div class="info-step">
+        <div class="info-step-num">2</div>
+        <div class="info-step-text" data-i18n="infoStep2">Scan to save and track your receipts</div>
+      </div>
+      <div class="info-step">
+        <div class="info-step-num">3</div>
+        <div class="info-step-text" data-i18n="infoStep3">Check prizes every 2 months (government draw)</div>
+      </div>
+      <div class="info-step">
+        <div class="info-step-num">4</div>
+        <div class="info-step-text" data-i18n="infoStep4">Win up to NT$10,000,000!</div>
+      </div>
+      <table class="prize-table">
+        <thead><tr><th data-i18n="prizeLevel">Prize Level</th><th data-i18n="prizeAmount">Amount</th></tr></thead>
+        <tbody>
+          <tr><td data-i18n="prizeSpecial">Special Prize</td><td>NT$10,000,000</td></tr>
+          <tr><td data-i18n="prizeGrand">Grand Prize</td><td>NT$2,000,000</td></tr>
+          <tr><td data-i18n="prize1st">First Prize</td><td>NT$200,000</td></tr>
+          <tr><td data-i18n="prize2nd">Second Prize</td><td>NT$40,000</td></tr>
+          <tr><td data-i18n="prize3rd">Third Prize</td><td>NT$10,000</td></tr>
+          <tr><td data-i18n="prize4th">Fourth Prize</td><td>NT$4,000</td></tr>
+          <tr><td data-i18n="prize5th">Fifth Prize</td><td>NT$1,000</td></tr>
+          <tr><td data-i18n="prize6th">Sixth Prize</td><td>NT$200</td></tr>
+        </tbody>
+      </table>
+      <button class="btn-close-info" onclick="closeInfo()" data-i18n="gotItBtn">Got it!</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== i18n =====
+const i18n = {
+  'zh-TW': {
+    appName: '發票存摺',
+    loginTitle: '掃描發票，\n贏取現金大獎。',
+    loginSubtitle: '台灣政府舉辦全國發票對獎——每張發票都有機會贏得最高 1,000 萬元！',
+    loginCarrierTitle: '綁定手機條碼',
+    linkBarcode: '已有條碼？點此綁定',
+    carrierHint: '格式：/ 開頭 + 7 碼英數字',
+    bindBtn: '綁定條碼',
+    googleBtn: '使用 Google 繼續',
+    fbBtn: 'Facebook',
+    lineBtn: 'LINE',
+    skipLink: '先跳過',
+    greeting: '嗨！準備中獎了嗎？',
+    greetingSub: '您有 12 張發票等待對獎',
+    statInvoices: '張發票', statCoins: '金幣', statCoupons: '張優惠券',
+    statInvoicesLabel: '張發票已存入',
+    statBoostHint: '再存入 <b style="color:var(--blue)">7 張</b>，本期中獎機率可望提升 <b style="color:var(--blue)">15%</b> ↑',
+    statProgress: '本期進度 23 / 30 張',
+    carrierTitle: '手機載具條碼',
+    carrierBoostBadge: '中獎機率 +3倍',
+    carrierSetupCTA: '點此設定載具條碼',
+    carrierSetupSub: '設定後可直接在這裡顯示',
+    carrierFullscreen: '全螢幕 ↗',
+    carrierBarcodeLabel: '發票存摺 手機條碼：/ABC-1234',
+    todoTitle: '🎯 提升中獎機率',
+    todoBankTitle: '綁定銀行帳號',
+    todoBankSub: '中獎可直接入帳 <b style="color:var(--blue)">+方便</b>',
+    todoLater: '稍後設定',
+    todoCarrierTitle: '載具歸戶',
+    todoCarrierSub: '雲端發票獎 <b style="color:var(--blue)">+2次機會</b>',
+    detailHeader: '電子發票證明聯',
+    detailRandom: '隨機碼：',
+    detailDate: '開立日期',
+    detailShop: '店家',
+    detailAddress: '地址',
+    detailStatus: '對獎狀態',
+    detailItems: '消費明細',
+    detailTotal: '合計',
+    detailFooter1: '財政部電子發票',
+    detailFooter2: '本發票已存入你的發票存摺帳戶',
+    detailFooter3: '開獎日：115年3月25日',
+    detailWonTitle: '恭喜！這張發票中獎',
+    detailWonSub: '獎金 NT$${prize} 元，請至郵局兌領',
+    detailDonatedTitle: '此發票已捐贈',
+    detailModalTitle: '發票明細',
+    analysisTitle: '消費分析',
+    catFood: '餐飲', catShop: '購物', catTransport: '交通', catOther: '其他',
+    recentInvoices: '最近發票', viewAll: '查看全部',
+    myInvoices: '我的發票',
+    chipAll: '全部', chipPending: '待對獎', chipWon: '中獎！', chipLost: '未中獎', chipDonated: '已捐贈',
+    badgePending: '待對獎', badgeWon: '中獎', badgeLost: '未中獎', badgeDonated: '已捐贈',
+    tagScan: '掃描', tagCarrier: '載具', tagManual: '手輸',
+    scanInvoice: '掃描發票', scanHint: '將發票的條碼或 QR Code 對準框框', manualInput: '手動輸入',
+    scanSuccess: '發票已儲存！', scanSuccessSub: '我們會在下次開獎時自動幫你對獎',
+    invoiceNum: '發票號碼', dateLabel: '日期', shopLabel: '店家', amountLabel: '金額',
+    cancelBtn: '取消', saveBtn: '儲存',
+    eCarrier: '發票條碼錢包', eCarrierDesc: '結帳時出示此條碼，自動收集發票',
+    barcodeLabel: '您的政府核發專屬條碼',
+    brightenScreen: '調亮螢幕', setDonation: '捐贈獎金',
+    tabCarrier: '條碼', tabDonation: '捐贈', lastSync: '最後同步：2026/02/28 14:30',
+    lotteryTitle: '發票對獎', lotteryDesc: '台灣政府每兩個月舉行一次開獎，看看你的發票有沒有中獎！',
+    lotteryPeriod: '2026 年 1-2 月期', checkNow: '立即對獎',
+    menuHistory: '對獎紀錄', menuCarrier: '歸戶發票', menuSettings: '設定', menuAbout: '關於',
+    lotteryChecking: '正在對獎中...', lotteryDone: '恭喜中獎！', lotteryDoneLost: '下次再接再厲！',
+    lotteryWinCount: '你有 2 張發票中獎，共 NT$400', lotteryWinCountLost: '本期沒有中獎發票',
+    lotteryLost: '其餘 21 張——本期未中獎', closeBtn: '關閉',
+    claimLink: '如何領獎？',
+    tabHome: '首頁', tabInvoice: '發票', tabScan: '掃描', tabCard: '錢包', tabAccount: '帳戶',
+    months: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+    yearSuffix: '年',
+    infoTitle: '這是什麼？',
+    infoStep1: '在台灣，每張發票都是一張彩券',
+    infoStep2: '掃描並儲存你的發票',
+    infoStep3: '每兩個月對獎一次（政府開獎）',
+    infoStep4: '最高可贏得 1,000 萬元！',
+    prizeLevel: '獎項', prizeAmount: '金額',
+    prizeSpecial: '特別獎', prizeGrand: '特獎', prize1st: '頭獎', prize2nd: '二獎',
+    prize3rd: '三獎', prize4th: '四獎', prize5th: '五獎', prize6th: '六獎',
+    gotItBtn: '了解！'
+  },
+  'en': {
+    appName: 'Receipt Wallet',
+    loginTitle: 'Scan receipts.\nWin cash prizes.',
+    loginSubtitle: 'Taiwan government runs a national lottery — every receipt is a chance to win up to NT$10,000,000!',
+    loginCarrierTitle: 'Link your mobile barcode',
+    linkBarcode: 'Already have a barcode? Link it',
+    carrierHint: 'Format: / followed by 7 alphanumeric characters',
+    bindBtn: 'Link Barcode',
+    googleBtn: 'Continue with Google',
+    fbBtn: 'Facebook',
+    lineBtn: 'LINE',
+    skipLink: 'Skip for now',
+    greeting: 'Hi! Ready to win?',
+    greetingSub: 'You have 12 receipts to check for prizes',
+    statInvoices: 'Receipts', statCoins: 'Coins', statCoupons: 'Vouchers',
+    statInvoicesLabel: 'receipts saved',
+    statBoostHint: 'Save <b style="color:var(--blue)">7 more</b> to boost your prize odds by <b style="color:var(--blue)">15%</b> ↑',
+    statProgress: 'This period: 23 / 30 receipts',
+    carrierTitle: 'Receipt Barcode Wallet',
+    carrierBoostBadge: '3x prize odds',
+    carrierSetupCTA: 'Set up your barcode wallet',
+    carrierSetupSub: 'It will appear here after setup',
+    carrierFullscreen: 'Fullscreen ↗',
+    carrierBarcodeLabel: 'Receipt Wallet Barcode: /ABC-1234',
+    todoTitle: '🎯 Boost Your Prize Odds',
+    todoBankTitle: 'Link Bank Account',
+    todoBankSub: 'Receive prize money directly',
+    todoLater: 'Set up later',
+    todoCarrierTitle: 'Link Cloud Receipts',
+    todoCarrierSub: 'Cloud receipt lottery <b>+2 chances</b>',
+    detailHeader: 'Electronic Invoice',
+    detailRandom: 'Random Code: ',
+    detailDate: 'Date',
+    detailShop: 'Store',
+    detailAddress: 'Address',
+    detailStatus: 'Prize Status',
+    detailItems: 'Items',
+    detailTotal: 'Total',
+    detailFooter1: 'Taiwan Government E-Invoice',
+    detailFooter2: 'Saved to your Receipt Wallet',
+    detailFooter3: 'Prize draw date: Mar 25, 2026',
+    detailWonTitle: 'Congratulations! This receipt won!',
+    detailWonSub: 'You won NT$${prize}! Claim at any post office',
+    detailDonatedTitle: 'Donated',
+    detailModalTitle: 'Receipt Details',
+    analysisTitle: 'Spending Analysis',
+    catFood: 'Food', catShop: 'Shopping', catTransport: 'Transport', catOther: 'Other',
+    recentInvoices: 'Recent Receipts', viewAll: 'View All',
+    myInvoices: 'My Receipts',
+    chipAll: 'All', chipPending: 'Unchecked', chipWon: 'Won!', chipLost: 'No prize', chipDonated: 'Donated',
+    badgePending: 'Pending', badgeWon: 'Won', badgeLost: 'No prize', badgeDonated: 'Donated',
+    tagScan: 'Scan', tagCarrier: 'Linked', tagManual: 'Manual',
+    scanInvoice: 'Scan Receipt', scanHint: 'Scan the barcode or QR code on your receipt', manualInput: 'Manual Entry',
+    scanSuccess: 'Receipt saved!', scanSuccessSub: "We'll check this in the next prize draw",
+    invoiceNum: 'Receipt No.', dateLabel: 'Date', shopLabel: 'Shop', amountLabel: 'Amount',
+    cancelBtn: 'Cancel', saveBtn: 'Save',
+    eCarrier: 'Receipt Barcode Wallet', eCarrierDesc: 'Show this barcode at checkout to automatically collect receipts',
+    barcodeLabel: 'Your unique government-issued barcode',
+    brightenScreen: 'Brighten Screen', setDonation: 'Donate Prize',
+    tabCarrier: 'Barcode', tabDonation: 'Donations', lastSync: 'Last sync: 2026/02/28 14:30',
+    lotteryTitle: 'Prize Lottery', lotteryDesc: 'Taiwan government holds a bi-monthly prize draw. Check if your receipts won!',
+    lotteryPeriod: 'Jan-Feb 2026 Draw', checkNow: 'Check My Prizes',
+    menuHistory: 'Prize History', menuCarrier: 'Linked Receipts', menuSettings: 'Settings', menuAbout: 'About',
+    lotteryChecking: 'Checking your receipts...', lotteryDone: 'Congratulations!', lotteryDoneLost: 'Better luck next time!',
+    lotteryWinCount: '2 of your receipts won prizes totaling NT$400', lotteryWinCountLost: 'None of your receipts won this time',
+    lotteryLost: '21 receipts — no prize this time', closeBtn: 'Close',
+    claimLink: 'How to claim your prize',
+    tabHome: 'Home', tabInvoice: 'Receipts', tabScan: 'Scan', tabCard: 'Wallet', tabAccount: 'Account',
+    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    yearSuffix: '',
+    infoTitle: 'What is this?',
+    infoStep1: 'Every receipt in Taiwan is a lottery ticket',
+    infoStep2: 'Scan to save and track your receipts',
+    infoStep3: 'Check prizes every 2 months (government draw)',
+    infoStep4: 'Win up to NT$10,000,000!',
+    prizeLevel: 'Prize Level', prizeAmount: 'Amount',
+    prizeSpecial: 'Special Prize', prizeGrand: 'Grand Prize', prize1st: 'First Prize', prize2nd: 'Second Prize',
+    prize3rd: 'Third Prize', prize4th: 'Fourth Prize', prize5th: 'Fifth Prize', prize6th: 'Sixth Prize',
+    gotItBtn: 'Got it!'
+  }
+};
+let currentLang = 'en';
+let currentMonth = 1; // 0-indexed, Feb = 1
+
+function t(key) { return i18n[currentLang][key] || key; }
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[currentLang][key]) {
+      const text = i18n[currentLang][key];
+      if (el.tagName === 'DIV' && key === 'loginTitle') {
+        el.innerHTML = text.replace('\n', '<br>');
+      } else {
+        el.textContent = text;
+      }
+    }
+  });
+  document.getElementById('langBtn').textContent = currentLang === 'zh-TW' ? 'EN' : '中';
+  // Update innerHTML-based i18n elements
+  const htmlKeys = { statBoostHint: 'statBoostHint', todoBankSub: 'todoBankSub', todoCarrierSub: 'todoCarrierSub' };
+  Object.entries(htmlKeys).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el && i18n[currentLang][key]) el.innerHTML = i18n[currentLang][key];
+  });
+  updateMonthLabel();
+  renderChips();
+  renderInvoices();
+  renderTabBars();
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
+  applyI18n();
+}
+
+function updateMonthLabel() {
+  const ml = i18n[currentLang].months;
+  const ys = i18n[currentLang].yearSuffix;
+  document.getElementById('monthLabel').textContent = currentLang === 'zh-TW'
+    ? `2026${ys}${ml[currentMonth]}`
+    : `${ml[currentMonth]} 2026`;
+}
+
+function changeMonth(d) {
+  currentMonth = Math.max(0, Math.min(11, currentMonth + d));
+  updateMonthLabel();
+}
+
+// ===== MOCK DATA =====
+const invoices = [
+  { num:'AB-12345678', shop:'全家便利商店', shopEn:'FamilyMart', date:'2026/02/15', dateROC:'115/02/15', amount:245, status:'pending', tag:'scan', randomCode:'75421236', address:'台北市中山區松江路100號', items:[
+    { name:'御飯糰（鮭魚）', qty:1, price:35 },
+    { name:'拿鐵咖啡（大）', qty:1, price:75 },
+    { name:'統一麥香紅茶', qty:2, price:50 },
+    { name:'波卡洋芋片', qty:1, price:35 },
+    { name:'光泉牛奶', qty:1, price:50 },
+  ]},
+  { num:'CD-87654321', shop:'統一超商', shopEn:'7-ELEVEN', date:'2026/02/14', dateROC:'115/02/14', amount:186, status:'won', prize:200, tag:'carrier', randomCode:'12348765', address:'台北市大安區敦化南路一段100號', items:[
+    { name:'關東煮（大腸）', qty:2, price:30 },
+    { name:'CITY CAFE 美式', qty:1, price:55 },
+    { name:'統一布丁', qty:1, price:25 },
+    { name:'香雞排', qty:1, price:46 },
+  ]},
+  { num:'EF-11223344', shop:'全聯福利中心', shopEn:'PX Mart', date:'2026/02/13', dateROC:'115/02/13', amount:1520, status:'lost', tag:'carrier', randomCode:'98761234', address:'台北市信義區松仁路100號', items:[
+    { name:'有機糙米（2kg）', qty:1, price:189 },
+    { name:'雞蛋（10顆）', qty:2, price:98 },
+    { name:'洗碗精（補充包）', qty:1, price:69 },
+    { name:'蔬菜（綜合）', qty:3, price:45 },
+    { name:'豬里肌肉片（300g）', qty:2, price:159 },
+    { name:'牛奶（1L）', qty:2, price:75 },
+    { name:'洗髮精', qty:1, price:199 },
+    { name:'衛生紙（8捲）', qty:2, price:119 },
+  ]},
+  { num:'GH-55667788', shop:'MOMO購物', shopEn:'MOMO', date:'2026/02/12', dateROC:'115/02/12', amount:3200, status:'pending', tag:'scan', randomCode:'55447722', address:'（網路購物）', items:[
+    { name:'無線藍牙耳機', qty:1, price:1890 },
+    { name:'手機殼', qty:2, price:299 },
+    { name:'充電線（2入）', qty:1, price:199 },
+    { name:'螢幕保護貼', qty:1, price:513 },
+  ]},
+  { num:'IJ-99887766', shop:'台灣大車隊', shopEn:'Taiwan Taxi', date:'2026/02/10', dateROC:'115/02/10', amount:350, status:'lost', tag:'manual', randomCode:'33221100', address:'計程車', items:[
+    { name:'計程車資', qty:1, price:350 },
+  ]},
+  { num:'KL-44332211', shop:'星巴克', shopEn:'Starbucks', date:'2026/02/08', dateROC:'115/02/08', amount:185, status:'won', prize:200, tag:'carrier', randomCode:'11224433', address:'台北市松山區南京東路三段100號', items:[
+    { name:'Caramel Macchiato（Grande）', qty:1, price:155 },
+    { name:'鮭魚全麥貝果', qty:0, price:0 },
+    { name:'服務費', qty:1, price:30 },
+  ]},
+  { num:'MN-66554433', shop:'屈臣氏', shopEn:'Watsons', date:'2026/02/05', dateROC:'115/02/05', amount:760, status:'lost', tag:'scan', randomCode:'66554488', address:'台北市中正區忠孝東路一段100號', items:[
+    { name:'洗面乳', qty:1, price:289 },
+    { name:'化妝水', qty:1, price:320 },
+    { name:'棉花棒', qty:2, price:49 },
+    { name:'濕紙巾', qty:1, price:53 },
+  ]},
+  { num:'OP-22113344', shop:'蝦皮購物', shopEn:'Shopee', date:'2026/02/03', dateROC:'115/02/03', amount:499, status:'donated', tag:'carrier', randomCode:'22334411', address:'（網路購物）', donateOrg:'台灣兒童暨家庭扶助基金會', items:[
+    { name:'瑜珈墊（加厚款）', qty:1, price:499 },
+  ]},
+  { num:'QR-77889900', shop:'誠品書店', shopEn:'Eslite', date:'2026/02/01', dateROC:'115/02/01', amount:680, status:'pending', tag:'manual', randomCode:'77889922', address:'台北市信義區松高路100號', items:[
+    { name:'小說《人生海海》', qty:1, price:320 },
+    { name:'原子筆（3入）', qty:1, price:120 },
+    { name:'便利貼', qty:2, price:120 },
+  ]},
+  { num:'ST-33445566', shop:'麥當勞', shopEn:"McDonald's", date:'2026/01/30', dateROC:'115/01/30', amount:199, status:'lost', tag:'scan', randomCode:'33445577', address:'台北市萬華區西藏路100號', items:[
+    { name:'大麥克套餐（大）', qty:1, price:169 },
+    { name:'麥克雞塊（6塊）', qty:1, price:79 },
+    { name:'折扣', qty:1, price:-49 },
+  ]},
+];
+
+let activeFilter = 'all';
+
+// ===== RENDER =====
+function renderInvoiceCard(inv) {
+  const shopName = currentLang === 'en' ? inv.shopEn : inv.shop;
+  const tagLabel = t('tag' + inv.tag.charAt(0).toUpperCase() + inv.tag.slice(1));
+  let badgeClass, badgeText;
+  if (inv.status === 'pending') { badgeClass = 'badge-pending'; badgeText = t('badgePending'); }
+  else if (inv.status === 'won') { badgeClass = 'badge-won'; badgeText = `${t('badgeWon')} NT$${inv.prize}`; }
+  else if (inv.status === 'donated') { badgeClass = 'badge-donated'; badgeText = t('badgeDonated'); }
+  else { badgeClass = 'badge-lost'; badgeText = t('badgeLost'); }
+  return `<div class="invoice-card fade-in" onclick="showInvoiceDetail('${inv.num}')" style="cursor:pointer">
+    <div class="invoice-top">
+      <span class="invoice-tag">${tagLabel}</span>
+      <span class="invoice-badge ${badgeClass}">${badgeText}</span>
+    </div>
+    <div class="invoice-number">${inv.num}</div>
+    <div class="invoice-shop">${shopName}</div>
+    <div class="invoice-bottom">
+      <span class="invoice-date">${inv.date}</span>
+      <span class="invoice-amount">NT$${inv.amount.toLocaleString()}</span>
+    </div>
+  </div>`;
+}
+
+function renderInvoices() {
+  const filtered = activeFilter === 'all' ? invoices : invoices.filter(i => i.status === activeFilter);
+  document.getElementById('invoiceList').innerHTML = filtered.map(renderInvoiceCard).join('') + '<div style="height:16px"></div>';
+  document.getElementById('recentInvoices').innerHTML = invoices.slice(0, 3).map(renderInvoiceCard).join('');
+}
+
+function renderChips() {
+  const filters = [
+    { key:'all', label:t('chipAll') },
+    { key:'pending', label:t('chipPending') },
+    { key:'won', label:t('chipWon') },
+    { key:'lost', label:t('chipLost') },
+    { key:'donated', label:t('chipDonated') },
+  ];
+  document.getElementById('chipRow').innerHTML = filters.map(f =>
+    `<div class="chip${f.key===activeFilter?' active':''}" onclick="setFilter('${f.key}')">${f.label}</div>`
+  ).join('');
+}
+
+function setFilter(f) { activeFilter = f; renderChips(); renderInvoices(); }
+
+function showInvoiceDetail(num) {
+  const inv = invoices.find(i => i.num === num);
+  if (!inv) return;
+
+  const statusMap = { pending: t('badgePending'), won: t('badgeWon') + ' 🎉', lost: t('badgeLost'), donated: t('badgeDonated') };
+  const statusColorMap = { pending:'#737380', won:'#9C6A05', lost:'#737380', donated:'#A3094A' };
+  const statusBgMap = { pending:'#EDEFF3', won:'#FFF1CD', lost:'#EDEFF3', donated:'#FFDEDE' };
+
+  const itemsHTML = inv.items.filter(it => it.price !== 0).map(it => `
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F7F8F9;font-size:14px">
+      <span style="color:#3B3C43;flex:1">${it.name}${it.qty > 1 ? ` × ${it.qty}` : ''}</span>
+      <span style="color:#101119;font-weight:500;margin-left:12px">${it.price < 0 ? '-' : ''}NT$${Math.abs(it.price * (it.qty||1)).toLocaleString()}</span>
+    </div>`).join('');
+
+  const wonBanner = inv.status === 'won' ? `
+    <div style="background:#FFF1CD;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:28px">🏆</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#9C6A05">${t('detailWonTitle')}</div>
+        <div style="font-size:13px;color:#9C6A05;margin-top:2px">${t('detailWonSub').replace('${prize}', inv.prize)}</div>
+      </div>
+    </div>` : '';
+
+  const donatedBanner = inv.status === 'donated' ? `
+    <div style="background:#FFDEDE;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:28px">💝</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:#A3094A">${t('detailDonatedTitle')}</div>
+        <div style="font-size:13px;color:#A3094A;margin-top:2px">${inv.donateOrg || '公益團體'}</div>
+      </div>
+    </div>` : '';
+
+  document.getElementById('invoiceDetailContent').innerHTML = `
+    ${wonBanner}${donatedBanner}
+    <!-- 發票標題 -->
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:12px;color:#9B9BAA;margin-bottom:4px">${t('detailHeader')}</div>
+      <div style="font-size:22px;font-weight:700;color:#101119;font-family:monospace;letter-spacing:2px">${inv.num}</div>
+      <div style="font-size:12px;color:#9B9BAA;margin-top:4px">${t('detailRandom')}${inv.randomCode}</div>
+    </div>
+
+    <!-- 基本資訊 -->
+    <div style="background:#F7F8F9;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px">
+        <span style="color:#737380">${t('detailDate')}</span>
+        <span style="color:#101119;font-weight:500">${inv.dateROC}（${inv.date}）</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px">
+        <span style="color:#737380">${t('detailShop')}</span>
+        <span style="color:#101119;font-weight:500">${inv.shop}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px">
+        <span style="color:#737380">${t('detailAddress')}</span>
+        <span style="color:#101119;font-weight:500;text-align:right;max-width:60%">${inv.address}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px">
+        <span style="color:#737380">${t('detailStatus')}</span>
+        <span style="background:${statusBgMap[inv.status]};color:${statusColorMap[inv.status]};font-size:12px;font-weight:600;padding:3px 10px;border-radius:6px">${statusMap[inv.status]}</span>
+      </div>
+    </div>
+
+    <!-- 品項明細 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:600;color:#101119;margin-bottom:8px">${t('detailItems')}</div>
+      ${itemsHTML}
+      <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:16px;font-weight:700;color:#101119;border-top:2px solid #101119;margin-top:4px">
+        <span>${t('detailTotal')}</span>
+        <span>NT$${inv.amount.toLocaleString()}</span>
+      </div>
+    </div>
+
+    <!-- 虛線分隔（模擬紙本發票撕線） -->
+    <div style="border-top:2px dashed #EDEFF3;margin:16px 0"></div>
+
+    <!-- 底部資訊 -->
+    <div style="text-align:center">
+      <div style="font-size:11px;color:#9B9BAA;line-height:1.6">
+        ${t('detailFooter1')}<br>
+        ${t('detailFooter2')}<br>
+        ${t('detailFooter3')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('invoiceDetailModal').style.display = 'flex';
+}
+
+function hideInvoiceDetail() {
+  document.getElementById('invoiceDetailModal').style.display = 'none';
+}
+
+// ===== TAB BAR =====
+const tabIcons = [
+  `<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zM6 20V4h5v7h7v9H6z"/></svg>`,
+  'scan',
+  `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.11-.89-2-2-2zm0 14H4V6h16v12zM4 0h16v2H4zm0 22h16v2H4z"/></svg>`,
+  `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
+];
+const tabKeys = ['tabHome','tabInvoice','tabScan','tabCard','tabAccount'];
+let activeTab = 0;
+const pages = ['homePage','invoicePage','scanPage','carrierPage','accountPage'];
+
+function renderTabBars() {
+  document.querySelectorAll('.tab-bar').forEach(bar => {
+    bar.innerHTML = tabIcons.map((icon, i) => {
+      if (icon === 'scan') {
+        return `<div class="tab-scan tab-item" onclick="switchTab(2)">
+          <div class="scan-btn"><svg viewBox="0 0 24 24"><path d="M4 4h4V2H2v6h2V4zm0 12H2v6h6v-2H4v-4zm16 4h-4v2h6v-6h-2v4zM16 2v2h4v4h2V2h-6zM12 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm0-8C9.24 7 7 9.24 7 12s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z"/></svg></div>
+          <span>${t(tabKeys[2])}</span>
+        </div>`;
+      }
+      return `<div class="tab-item${i===activeTab?' active':''}" onclick="switchTab(${i})">
+        ${icon}<span>${t(tabKeys[i])}</span>
+      </div>`;
+    }).join('');
+  });
+}
+
+function switchTab(idx) {
+  if (idx === 2) {
+    document.getElementById('scanPage').classList.add('active');
+    resetScan();
+    return;
+  }
+  activeTab = idx;
+  document.querySelectorAll('.page').forEach(p => {
+    if (p.id !== 'login' && p.id !== 'scanPage' && p.id !== 'lotteryModal')
+      p.classList.remove('active');
+  });
+  document.getElementById(pages[idx]).classList.add('active');
+  renderTabBars();
+}
+
+function closeScan() {
+  document.getElementById('scanPage').classList.remove('active');
+  resetScan();
+}
+
+// ===== LOGIN =====
+function toggleCarrierInput() {
+  document.getElementById('carrierInputGroup').classList.toggle('show');
+}
+
+function doLogin() {
+  document.getElementById('login').classList.remove('active');
+  document.getElementById('homePage').classList.add('active');
+}
+
+// ===== SCAN =====
+let scanTimeout;
+function triggerScan() {
+  const frame = document.getElementById('scanFrame');
+  if (frame.classList.contains('success')) return;
+  frame.classList.add('success');
+  setTimeout(() => {
+    document.getElementById('scanResult').classList.add('show');
+  }, 600);
+}
+
+function resetScan() {
+  document.getElementById('scanFrame').classList.remove('success');
+  document.getElementById('scanResult').classList.remove('show');
+  clearTimeout(scanTimeout);
+  scanTimeout = setTimeout(triggerScan, 3000);
+}
+
+function closeScanResult() {
+  document.getElementById('scanResult').classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('scanFrame').classList.remove('success');
+    resetScan();
+  }, 300);
+}
+
+function saveScan() {
+  closeScan();
+}
+
+// ===== LOTTERY =====
+function startLottery() {
+  const modal = document.getElementById('lotteryModal');
+  const scanning = document.getElementById('lotteryScanning');
+  const result = document.getElementById('lotteryResult');
+  const bar = document.getElementById('lotteryBar');
+  const numEl = document.getElementById('lotteryScanNum');
+
+  modal.classList.add('show');
+  scanning.style.display = 'block';
+  result.classList.remove('show');
+  bar.style.width = '0%';
+
+  let idx = 0;
+  const interval = setInterval(() => {
+    if (idx >= invoices.length) {
+      clearInterval(interval);
+      setTimeout(() => {
+        scanning.style.display = 'none';
+        const wins = invoices.filter(i => i.status === 'won');
+        const totalPrize = wins.reduce((s, w) => s + w.prize, 0);
+        const iconEl = document.getElementById('lotteryResultIcon');
+        const titleEl = document.getElementById('lotteryResultTitle');
+        const winCountEl = document.getElementById('lotteryWinCountEl');
+        const winAmountEl = document.getElementById('lotteryWinAmount');
+        const lostEl = document.getElementById('lotteryLostEl');
+
+        if (wins.length > 0) {
+          iconEl.className = 'lottery-result-icon';
+          titleEl.textContent = t('lotteryDone');
+          winCountEl.textContent = t('lotteryWinCount');
+          winAmountEl.textContent = 'NT$' + totalPrize;
+          winAmountEl.style.display = 'block';
+          lostEl.textContent = t('lotteryLost');
+          document.getElementById('lotteryWinCards').innerHTML = wins.map(w => `
+            <div class="lottery-win-card">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><div class="wnum">${w.num}</div><div class="wshop">${currentLang==='en'?w.shopEn:w.shop}</div></div>
+                <div class="wamt">NT$${w.prize}</div>
+              </div>
+            </div>
+          `).join('') + `<a class="claim-link">${t('claimLink')}</a>`;
+        } else {
+          iconEl.className = 'lottery-result-icon lost-icon';
+          titleEl.textContent = t('lotteryDoneLost');
+          winCountEl.textContent = t('lotteryWinCountLost');
+          winAmountEl.style.display = 'none';
+          lostEl.textContent = '';
+          document.getElementById('lotteryWinCards').innerHTML = '';
+        }
+        result.classList.add('show');
+      }, 400);
+      return;
+    }
+    numEl.textContent = invoices[idx].num;
+    bar.style.width = ((idx + 1) / invoices.length * 100) + '%';
+    idx++;
+  }, 300);
+}
+
+function closeLottery() {
+  document.getElementById('lotteryModal').classList.remove('show');
+}
+
+// ===== INFO MODAL =====
+function openInfo() {
+  document.getElementById('infoModal').classList.add('show');
+}
+function closeInfo() {
+  document.getElementById('infoModal').classList.remove('show');
+}
+
+// ===== BARCODE =====
+function renderBarcode() {
+  const svg = document.getElementById('barcodeSvg');
+  let bars = '';
+  const pattern = [2,1,3,1,2,1,1,3,2,1,1,2,3,1,2,1,1,3,1,2,3,1,1,2,1,3,2,1,1,3,1,2,1,1,3,2,1,2,1,3,1,1,2,3,1,2,1,1,3,2,1,1,2,3,1,2,1,3,1,1,2,1,3,2,1,1,3,1,2,3];
+  let x = 10;
+  pattern.forEach((w, i) => {
+    if (i % 2 === 0) {
+      bars += `<rect x="${x}" y="5" width="${w}" height="50" fill="#101119"/>`;
+    }
+    x += w + 0.5;
+  });
+  svg.innerHTML = bars;
+}
+
+// ===== CARRIER TABS =====
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('carrier-tab')) {
+    e.target.parentElement.querySelectorAll('.carrier-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+});
+
+// ===== ONBOARDING =====
+const OB = {
+  step: 0,
+  chat: null,
+  actions: null,
+  progressFill: null,
+  stepLabel: null,
+  queue: [],
+  processing: false,
+  hasCarrier: null,
+
+  start() {
+    this.chat = document.getElementById('obChat');
+    this.actions = document.getElementById('obActions');
+    this.progressFill = document.getElementById('obProgressFill');
+    this.stepLabel = document.getElementById('obStepLabel');
+    const ob = document.getElementById('onboarding');
+    ob.style.display = 'flex';
+    // Hide login since onboarding replaces it
+    document.getElementById('login').classList.remove('active');
+    this.runStep0();
+  },
+
+  setProgress(step, total) {
+    this.progressFill.style.width = (step / total * 100) + '%';
+    this.stepLabel.textContent = step + '/' + total;
+  },
+
+  clearActions() {
+    this.actions.innerHTML = '';
+    this.actions.classList.remove('visible');
+  },
+
+  showActions(html) {
+    this.actions.innerHTML = html;
+    // force reflow
+    void this.actions.offsetWidth;
+    this.actions.style.opacity = '0';
+    this.actions.style.transform = 'translateY(12px)';
+    this.actions.classList.add('visible');
+    requestAnimationFrame(() => {
+      this.actions.style.opacity = '1';
+      this.actions.style.transform = 'translateY(0)';
+    });
+  },
+
+  scrollToBottom() {
+    requestAnimationFrame(() => {
+      this.chat.scrollTop = this.chat.scrollHeight;
+    });
+  },
+
+  addBubble(text, type) {
+    // type: 'system' or 'user'
+    return new Promise(resolve => {
+      if (type === 'system') {
+        // Show typing indicator first
+        const typing = document.createElement('div');
+        typing.className = 'ob-typing';
+        typing.innerHTML = '<span></span><span></span><span></span>';
+        this.chat.appendChild(typing);
+        this.scrollToBottom();
+        setTimeout(() => {
+          typing.remove();
+          const bubble = document.createElement('div');
+          bubble.className = 'ob-bubble system';
+          bubble.innerHTML = text;
+          this.chat.appendChild(bubble);
+          this.scrollToBottom();
+          resolve();
+        }, 600);
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = 'ob-bubble user';
+        bubble.innerHTML = text;
+        this.chat.appendChild(bubble);
+        this.scrollToBottom();
+        resolve();
+      }
+    });
+  },
+
+  async addSystemMessages(messages, delay) {
+    delay = delay || 1500;
+    for (let i = 0; i < messages.length; i++) {
+      await this.addBubble(messages[i], 'system');
+      if (i < messages.length - 1) await this.wait(delay);
+    }
+  },
+
+  wait(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  },
+
+  // Step 0: Language selection
+  async runStep0() {
+    this.setProgress(0, 5);
+    await this.addBubble('嗨！👋 我是你的幸運小天使 🍀<br>在我們開始之前，你想用哪種語言？', 'system');
+    this.showActions(`
+      <button class="ob-btn primary" onclick="OB.selectLang('繁體中文')">繁體中文</button>
+      <button class="ob-btn" onclick="OB.selectLang('English')">English</button>
+      <button class="ob-btn" onclick="OB.selectLang('日本語')">日本語</button>
+      <button class="ob-btn" onclick="OB.selectLang('한국어')">한국어</button>
+      <button class="ob-btn" onclick="OB.selectLang('Español')">Español</button>
+    `);
+  },
+
+  async selectLang(lang) {
+    this.clearActions();
+    await this.addBubble(lang, 'user');
+    if (lang !== '繁體中文') {
+      await this.wait(400);
+      await this.addBubble('Coming soon！目前先用繁體中文繼續 😊', 'system');
+    }
+    await this.wait(400);
+    this.runFontCheck();
+  },
+
+  async runFontCheck() {
+    await this.addBubble('在我們開始之前，先確認一下文字大小是否適合你閱讀 👀', 'system');
+    await this.wait(600);
+    await this.addBubble('<span id="font-preview" style="display:block;font-size:16px;line-height:1.6">這是目前的文字大小<br>台灣發票可以對獎，最高獎金 1,000萬元！</span>', 'system');
+    await this.wait(400);
+    this.showActions(`
+      <div style="display:flex;flex-direction:column;gap:10px;width:100%">
+        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:4px">
+          <button class="ob-btn secondary" style="flex:1;padding:10px" onclick="OB.adjustFont('small')">A－ 小一點</button>
+          <button class="ob-btn secondary" style="flex:1;padding:10px" onclick="OB.adjustFont('large')">A＋ 大一點</button>
+        </div>
+        <button class="ob-btn primary" onclick="OB.fontDone()">這樣剛好 ✓</button>
+      </div>
+    `);
+  },
+
+  _fontScale: 1.0,
+  adjustFont(dir) {
+    const preview = document.getElementById('font-preview');
+    if (!preview) return;
+    if (dir === 'large') this._fontScale = Math.min(this._fontScale + 0.125, 1.5);
+    if (dir === 'small') this._fontScale = Math.max(this._fontScale - 0.125, 0.75);
+    const base = Math.round(16 * this._fontScale);
+    // 只改預覽氣泡大小，其他不動
+    preview.style.fontSize = base + 'px';
+    // 存到 CSS variable，fontDone 後套用到 app
+    document.documentElement.style.setProperty('--font-scale', this._fontScale);
+  },
+
+  async fontDone() {
+    this.clearActions();
+    await this.addBubble('這樣剛好 ✓', 'user');
+    await this.wait(300);
+    await this.addBubble('好的！設定完成 😊', 'system');
+    // 套用字體縮放：只改內容文字，結構不動
+    const scale = this._fontScale;
+    const pct = Math.round(scale * 100) + '%';
+    const styleId = 'font-scale-style';
+    let el = document.getElementById(styleId);
+    if (!el) { el = document.createElement('style'); el.id = styleId; document.head.appendChild(el); }
+    el.textContent = `
+      .ob-bubble, .home-body, .invoice-list, .page-content, .section-body,
+      .invoice-card, .stat-value, .stat-label, .greeting, .greeting-sub,
+      .analysis-row, .category-name, .category-pct, .wallet-body, .info-card,
+      .prize-table, .account-body { font-size: ${scale}em !important; }
+    `;
+    await this.wait(500);
+    this.runStep1();
+  },
+
+  // Step 1: Invoice story (progress 1/5)
+  async runStep1() {
+    this.setProgress(1, 5);
+    await this.addSystemMessages([
+      '你知道嗎？🧾<br>台灣每一張發票，都是一張彩券！',
+      '政府每兩個月開獎一次，<br>最高獎金高達 <b>1,000萬元</b>！💰<br>很多人有中獎的發票，卻不知道！',
+      '我來幫你把發票都存起來，<br>開獎的時候自動幫你對獎 🎰<br>一起讓你的發票發揮最大價值！'
+    ], 1500);
+
+    this.showActions(`
+      <button class="ob-btn primary" onclick="OB.storyDone(false)">好！我要開始</button>
+      <button class="ob-btn secondary" onclick="OB.storyDone(true)">跳過說明</button>
+    `);
+  },
+
+  async storyDone(skipped) {
+    this.clearActions();
+    await this.addBubble(skipped ? '跳過說明' : '好！我要開始', 'user');
+    await this.wait(400);
+    this.runStep2();
+  },
+
+  // Step 2: Carrier question (progress 2/5)
+  async runStep2() {
+    this.setProgress(2, 5);
+    await this.addBubble('首先，我需要問你一個問題 🤔<br><br>你有沒有『電子載具』？<br>（就是去便利商店結帳時，<br>店員掃你手機條碼的那個東西）', 'system');
+    this.showActions(`
+      <button class="ob-btn primary" onclick="OB.carrierAnswer('yes')">有！我已經有了</button>
+      <button class="ob-btn" onclick="OB.carrierAnswer('no')">沒有，什麼是載具？</button>
+      <button class="ob-btn secondary" onclick="OB.carrierAnswer('unsure')">不確定</button>
+    `);
+  },
+
+  async carrierAnswer(ans) {
+    this.clearActions();
+    if (ans === 'yes') {
+      await this.addBubble('有！我已經有了', 'user');
+      await this.wait(400);
+      await this.addBubble('太棒了！等一下我會請你把條碼連結進來 👍', 'system');
+      this.hasCarrier = true;
+      await this.wait(600);
+      this.runStep3();
+    } else if (ans === 'no') {
+      await this.addBubble('沒有，什麼是載具？', 'user');
+      await this.wait(400);
+      await this.addBubble('電子載具是財政部提供的免費服務 📱<br>申請後，你去任何地方消費，<br>只要讓店員掃你的條碼，<br>發票就會自動存進來，超方便！', 'system');
+      await this.wait(1200);
+      await this.addBubble('有了載具，你的中獎機率會大幅提升！🎯<br><br>🎰 <b>對獎兩次機會</b>：一般發票只對一次，有載具的電子發票還能額外參加「雲端發票獎」，等於多一次中獎機會！<br><br>✅ 自動收集所有發票，不用手動掃<br>✅ 不怕發票遺失或忘記<br>✅ 開獎時一次全部幫你查<br>✅ 完全免費，政府提供', 'system');
+      await this.wait(1800);
+      await this.addBubble('根據統計，使用載具的人平均中獎率比一般人高出約 <b>3 倍</b>，因為每張發票都不會漏掉 📊', 'system');
+      await this.wait(1500);
+      await this.addBubble('申請只需要你的手機號碼，大概 5 分鐘就完成 ⏱️<br><br>你想現在申請嗎？還是先設定成代辦事項，之後再說？', 'system');
+      this.showActions(`
+        <button class="ob-btn primary" onclick="OB.carrierApply()">現在申請（約5分鐘）</button>
+        <button class="ob-btn secondary" onclick="OB.carrierLater()">先設為代辦，之後再說</button>
+      `);
+    } else {
+      await this.addBubble('不確定', 'user');
+      await this.wait(400);
+      await this.addBubble('沒關係！我們先跳過這步，你還是可以用掃描功能 😊', 'system');
+      await this.wait(600);
+      this.runStep3();
+    }
+  },
+
+  async carrierApply() {
+    this.clearActions();
+    await this.addBubble('現在申請', 'user');
+    await this.wait(300);
+    this.showActions(`
+      <div class="ob-input-row">
+        <input class="ob-input" id="obPhone" type="tel" placeholder="輸入手機號碼" maxlength="10">
+        <button class="ob-btn primary" onclick="OB.submitPhone()">送出</button>
+      </div>
+    `);
+  },
+
+  async submitPhone() {
+    const phone = document.getElementById('obPhone').value || '0912345678';
+    this.clearActions();
+    await this.addBubble(phone, 'user');
+    await this.wait(400);
+    await this.addBubble('驗證碼已發送！📨<br>（模擬完成，繼續下一步）', 'system');
+    this.hasCarrier = true;
+    await this.wait(600);
+    this.runStep3();
+  },
+
+  async carrierLater() {
+    this.clearActions();
+    await this.addBubble('晚點再說，設為代辦', 'user');
+    await this.wait(400);
+    await this.addBubble('沒問題！我幫你加到代辦清單 ✅ 你隨時可以在設定裡完成', 'system');
+    await this.wait(600);
+    this.runStep3();
+  },
+
+  // Step 3: Login binding (progress 3/5)
+  async runStep3() {
+    this.setProgress(3, 5);
+    await this.addBubble('為了保護你的資料安全 🔐<br>請先綁定一個快速登入方式<br>這樣就算換手機，你的發票也不會不見！', 'system');
+    this.showActions(`
+      <div class="ob-login-btns">
+        <button class="ob-login-btn google" onclick="OB.doLogin('Google')">
+          <svg width="22" height="22" viewBox="0 0 22 22"><path d="M21.35 11.13h-9.18v3.37h5.28c-.23 1.2-.93 2.21-1.97 2.89l3.18 2.47c1.86-1.71 2.93-4.24 2.93-7.24 0-.62-.06-1.22-.17-1.79z" fill="#4285F4"/><path d="M12.17 22c2.7 0 4.96-.9 6.62-2.42l-3.18-2.47c-.9.6-2.04.95-3.44.95-2.65 0-4.89-1.79-5.69-4.19l-3.27 2.53A10.97 10.97 0 0012.17 22z" fill="#34A853"/><path d="M6.48 13.87a6.62 6.62 0 010-4.24l-3.27-2.53a10.97 10.97 0 000 9.3l3.27-2.53z" fill="#FBBC05"/><path d="M12.17 4.44c1.5 0 2.84.51 3.9 1.52l2.92-2.92C17.12 1.31 14.86.25 12.17.25A10.97 10.97 0 003.21 5.1l3.27 2.53c.8-2.4 3.04-4.19 5.69-4.19z" fill="#EA4335"/></svg>
+          用 Google 登入
+        </button>
+        <button class="ob-login-btn facebook" onclick="OB.doLogin('Facebook')">
+          <svg width="22" height="22" viewBox="0 0 22 22"><path d="M22 11a11 11 0 10-12.72 10.87v-7.69H6.5V11h2.78V8.58c0-2.74 1.63-4.26 4.13-4.26 1.2 0 2.45.21 2.45.21v2.69h-1.38c-1.36 0-1.78.84-1.78 1.71V11h3.03l-.48 3.18h-2.55v7.69A11 11 0 0022 11z" fill="#1877F2"/></svg>
+          用 Facebook 登入
+        </button>
+        <button class="ob-login-btn line-btn" onclick="OB.doLogin('LINE')">
+          <svg width="22" height="22" viewBox="0 0 22 22"><path d="M22 10.26c0-5.09-5.1-9.23-11.37-9.23S-.74 5.17-.74 10.26c0 4.56 4.04 8.38 9.5 9.1.37.08.87.24 1 .56.11.28.07.73.04 1.01 0 0-.13.8-.16.97-.05.29-.23 1.14 1-.62s6.8-4 9.28-6.85c1.71-1.88 2.54-3.79 2.54-6.17z" fill="#06C755"/></svg>
+          用 LINE 登入
+        </button>
+      </div>
+    `);
+  },
+
+  async doLogin(provider) {
+    this.clearActions();
+    await this.addBubble('用 ' + provider + ' 登入', 'user');
+    await this.wait(300);
+    // Show "logging in"
+    await this.addBubble('登入中...', 'system');
+    await this.wait(800);
+    await this.addBubble('完美！帳號已綁定 ✅', 'system');
+    await this.wait(500);
+
+    // Show Face ID prompt
+    this.showActions(`
+      <div class="ob-faceid">
+        <h3>要啟用 Face ID 嗎？</h3>
+        <p>下次開啟 App 時，不需要重新登入</p>
+        <div class="ob-faceid-btns">
+          <button class="enable" onclick="OB.faceIdDone(true)">啟用</button>
+          <button class="skip" onclick="OB.faceIdDone(false)">略過</button>
+        </div>
+      </div>
+    `);
+  },
+
+  async faceIdDone(enabled) {
+    this.clearActions();
+    await this.addBubble(enabled ? '啟用 Face ID' : '略過', 'user');
+    await this.wait(400);
+    await this.addBubble('很好！設定完成 🎉', 'system');
+    await this.wait(600);
+    this.runStep4();
+  },
+
+  // Step 4: Scan experience (progress 4/5)
+  async runStep4() {
+    this.setProgress(4, 5);
+    await this.addBubble('最後一步！讓我帶你掃描第一張發票 📲<br>找一張你手邊的發票，或是任何條碼都可以！', 'system');
+    this.showActions(`
+      <button class="ob-scan-btn" onclick="OB.openScan()">開始掃描 📷</button>
+    `);
+  },
+
+  openScan() {
+    this.clearActions();
+    const overlay = document.getElementById('obScanOverlay');
+    overlay.classList.add('show');
+    document.getElementById('obScanFrame').classList.remove('success');
+    // Auto-scan after 3s
+    this._scanTimer = setTimeout(() => this.obScanSuccess(), 3000);
+  },
+
+  obScanSuccess() {
+    const frame = document.getElementById('obScanFrame');
+    if (frame.classList.contains('success')) return;
+    frame.classList.add('success');
+  },
+
+  async showInvoiceCard() {
+    document.getElementById('obScanOverlay').classList.remove('show');
+    clearTimeout(this._scanTimer);
+
+    await this.wait(300);
+    // Show invoice card as action area
+    this.showActions(`
+      <div class="ob-invoice-card">
+        <div class="hdr">✅ 掃描成功！</div>
+        <div class="row"><span class="lbl">發票號碼</span><span style="font-family:var(--mono);font-weight:500">AB-12345678</span></div>
+        <div class="row"><span class="lbl">開立日期</span><span>115/02/15</span></div>
+        <div class="row"><span class="lbl">店家</span><span>全家便利商店（松江南京店）</span></div>
+        <div class="row"><span class="lbl">隨機碼</span><span style="font-family:var(--mono)">75421236</span></div>
+        <div class="items">
+          <div class="item"><span>御飯糰（鮭魚）×1</span><span>$35</span></div>
+          <div class="item"><span>拿鐵咖啡（大）×1</span><span>$75</span></div>
+          <div class="item"><span>波卡洋芋片 ×2</span><span>$70</span></div>
+          <div class="item"><span>統一麥香紅茶 ×1</span><span>$25</span></div>
+        </div>
+        <div class="total"><span>小計</span><span>$205</span></div>
+        <button class="ob-btn primary" style="width:100%;margin-top:12px" onclick="OB.saveInvoice()">儲存這張發票</button>
+      </div>
+    `);
+  },
+
+  async saveInvoice() {
+    this.clearActions();
+    await this.addBubble('儲存這張發票', 'user');
+    await this.wait(400);
+    await this.addBubble('太棒了！🎉<br>這張發票已經安全地存進來了！<br><br>提醒你：這期發票（1-2月份）<br>目前開獎時間是 <b>3月25日</b><br>到時候我會自動幫你對獎，有中獎一定通知你！', 'system');
+    await this.wait(800);
+    this.showActions(`
+      <button class="ob-btn primary" style="font-size:17px;padding:14px 32px" onclick="OB.finish()">進入 App 開始使用！</button>
+    `);
+  },
+
+  // Step 5: Finish (progress 5/5)
+  async finish() {
+    this.clearActions();
+    this.setProgress(5, 5);
+
+    // Confetti animation
+    const confetti = document.createElement('div');
+    confetti.className = 'ob-confetti';
+    const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF9FF3'];
+    for (let i = 0; i < 20; i++) {
+      const span = document.createElement('span');
+      span.style.left = (Math.random() * 100) + '%';
+      span.style.background = colors[i % colors.length];
+      span.style.animationDelay = (Math.random() * 0.8) + 's';
+      span.style.width = (6 + Math.random() * 8) + 'px';
+      span.style.height = span.style.width;
+      confetti.appendChild(span);
+    }
+    document.getElementById('onboarding').appendChild(confetti);
+
+    await this.wait(1500);
+
+    // Save completion
+    localStorage.setItem('onboarding_done', '1');
+
+    // Fade out onboarding
+    const ob = document.getElementById('onboarding');
+    ob.classList.add('hidden');
+    await this.wait(600);
+    ob.style.display = 'none';
+
+    // Show main app
+    document.getElementById('homePage').classList.add('active');
+  }
+};
+
+// Hook: clicking scan frame during onboarding triggers success + show card
+function obTriggerScan() {
+  OB.obScanSuccess();
+  setTimeout(() => OB.showInvoiceCard(), 600);
+}
+function obCloseScan() {
+  document.getElementById('obScanOverlay').classList.remove('show');
+  clearTimeout(OB._scanTimer);
+}
+
+// Also auto-show card after scan success
+const _origObScanSuccess = OB.obScanSuccess.bind(OB);
+OB.obScanSuccess = function() {
+  _origObScanSuccess();
+  setTimeout(() => OB.showInvoiceCard(), 600);
+};
+
+// ===== INIT =====
+function init() {
+  renderTabBars();
+  renderChips();
+  renderInvoices();
+  renderBarcode();
+  updateMonthLabel();
+
+  // Check if onboarding should show
+  const params = new URLSearchParams(window.location.search);
+  const forceOnboarding = params.get('onboarding') === '1';
+  const done = localStorage.getItem('onboarding_done');
+
+  if (!done || forceOnboarding) {
+    OB.start();
+  }
+  // If onboarding done, normal login page shows
+}
+
+init();
+</script>
+<!-- ========== INVOICE DETAIL MODAL ========== -->
+<div id="invoiceDetailModal" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)hideInvoiceDetail()">
+  <div style="background:#fff;width:100%;max-height:88vh;border-radius:24px 24px 0 0;display:flex;flex-direction:column">
+    <!-- Handle + header -->
+    <div style="flex-shrink:0;padding:12px 20px 0">
+      <div style="display:flex;justify-content:center;margin-bottom:12px">
+        <div style="width:36px;height:4px;background:#EDEFF3;border-radius:2px"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid #EDEFF3">
+        <div style="font-size:16px;font-weight:600;color:#101119" data-i18n="detailModalTitle">發票明細</div>
+        <button onclick="hideInvoiceDetail()" style="background:#EDEFF3;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#737380">✕</button>
+      </div>
+    </div>
+    <!-- 內容（可捲動） -->
+    <div id="invoiceDetailContent" style="overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 20px 32px;flex:1"></div>
+  </div>
+</div>
+
+<!-- ========== BARCODE FULLSCREEN ========== -->
+<div id="barcodeFullscreen" style="display:none;position:fixed;inset:0;z-index:950;background:#fff;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <button onclick="hideBarcodeFullscreen()" style="position:absolute;top:20px;right:20px;background:#EDEFF3;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+  <div style="font-size:14px;color:#737380;margin-bottom:4px">手機條碼載具</div>
+  <div style="font-family:monospace;font-size:28px;font-weight:700;color:#101119;letter-spacing:4px">/ABC-1234</div>
+  <!-- 大型條碼 -->
+  <div style="background:#fff;border:1px solid #EDEFF3;border-radius:12px;padding:20px 24px">
+    <svg viewBox="0 0 280 100" style="width:280px;height:100px">
+      <rect width="280" height="100" fill="#fff"/>
+      <g fill="#000">
+        <rect x="4"  y="4" width="3"  height="92"/><rect x="10" y="4" width="6"  height="92"/>
+        <rect x="19" y="4" width="2"  height="92"/><rect x="24" y="4" width="5"  height="92"/>
+        <rect x="32" y="4" width="3"  height="92"/><rect x="38" y="4" width="2"  height="92"/>
+        <rect x="43" y="4" width="6"  height="92"/><rect x="52" y="4" width="3"  height="92"/>
+        <rect x="58" y="4" width="2"  height="92"/><rect x="63" y="4" width="5"  height="92"/>
+        <rect x="71" y="4" width="3"  height="92"/><rect x="77" y="4" width="6"  height="92"/>
+        <rect x="86" y="4" width="2"  height="92"/><rect x="91" y="4" width="3"  height="92"/>
+        <rect x="97" y="4" width="5"  height="92"/><rect x="105" y="4" width="2" height="92"/>
+        <rect x="110" y="4" width="6" height="92"/><rect x="119" y="4" width="3" height="92"/>
+        <rect x="125" y="4" width="2" height="92"/><rect x="130" y="4" width="5" height="92"/>
+        <rect x="138" y="4" width="3" height="92"/><rect x="144" y="4" width="6" height="92"/>
+        <rect x="153" y="4" width="2" height="92"/><rect x="158" y="4" width="3" height="92"/>
+        <rect x="164" y="4" width="5" height="92"/><rect x="172" y="4" width="2" height="92"/>
+        <rect x="177" y="4" width="6" height="92"/><rect x="186" y="4" width="3" height="92"/>
+        <rect x="192" y="4" width="2" height="92"/><rect x="197" y="4" width="5" height="92"/>
+        <rect x="205" y="4" width="3" height="92"/><rect x="211" y="4" width="6" height="92"/>
+        <rect x="220" y="4" width="2" height="92"/><rect x="225" y="4" width="3" height="92"/>
+        <rect x="231" y="4" width="5" height="92"/><rect x="239" y="4" width="2" height="92"/>
+        <rect x="244" y="4" width="6" height="92"/><rect x="253" y="4" width="3" height="92"/>
+        <rect x="259" y="4" width="2" height="92"/><rect x="264" y="4" width="5" height="92"/>
+        <rect x="272" y="4" width="3" height="92"/>
+      </g>
+    </svg>
+  </div>
+  <div style="font-size:12px;color:#9B9BAA;text-align:center;max-width:240px;line-height:1.5">結帳時出示給店員掃描<br>即可自動儲存你的電子發票</div>
+  <!-- 調亮螢幕提示 -->
+  <div style="display:flex;align-items:center;gap:8px;background:#F7F8F9;border-radius:10px;padding:10px 16px">
+    <span style="font-size:18px">☀️</span>
+    <span style="font-size:13px;color:#737380">已自動調高螢幕亮度</span>
+  </div>
+</div>
+
+<!-- ========== CARRIER SETUP MODAL ========== -->
+<div id="carrierSetupModal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center">
+  <div style="background:#fff;width:100%;max-height:90vh;border-radius:24px 24px 0 0;overflow-y:auto;padding:0 0 32px">
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 0">
+      <div style="width:36px;height:4px;background:#EDEFF3;border-radius:2px"></div>
+    </div>
+    <!-- Step indicator -->
+    <div id="csStep" style="padding:16px 20px 0">
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <div id="csDot1" style="flex:1;height:3px;border-radius:2px;background:#3560FF;transition:background .3s"></div>
+        <div id="csDot2" style="flex:1;height:3px;border-radius:2px;background:#EDEFF3;transition:background .3s"></div>
+        <div id="csDot3" style="flex:1;height:3px;border-radius:2px;background:#EDEFF3;transition:background .3s"></div>
+      </div>
+
+      <!-- Step 1: 輸入手機 -->
+      <div id="csPage1">
+        <div style="font-size:18px;font-weight:600;color:#101119;margin-bottom:6px">申請手機條碼載具</div>
+        <div style="font-size:13px;color:#737380;margin-bottom:20px;line-height:1.5">輸入你的手機號碼，財政部將免費提供一組專屬條碼，讓你在每次消費時自動收集發票。</div>
+        <div style="font-size:13px;font-weight:500;color:#3B3C43;margin-bottom:8px">手機號碼</div>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <div style="background:#F7F8F9;border:1.5px solid #EDEFF3;border-radius:10px;padding:0 12px;height:48px;display:flex;align-items:center;font-size:14px;color:#737380;white-space:nowrap">+886</div>
+          <input id="csPhone" type="tel" maxlength="10" placeholder="09XX-XXX-XXX" style="flex:1;height:48px;border:1.5px solid #EDEFF3;border-radius:10px;padding:0 14px;font-size:15px;outline:none;font-family:monospace" oninput="csValidatePhone()">
+        </div>
+        <div style="font-size:12px;color:#9B9BAA;margin-bottom:24px">此號碼將作為你的電子載具識別碼</div>
+        <button id="csBtn1" onclick="csNextStep(2)" style="width:100%;height:48px;background:#BBBBC8;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:not-allowed" disabled>發送驗證碼</button>
+      </div>
+
+      <!-- Step 2: 驗證碼 -->
+      <div id="csPage2" style="display:none">
+        <div style="font-size:18px;font-weight:600;color:#101119;margin-bottom:6px">輸入驗證碼</div>
+        <div style="font-size:13px;color:#737380;margin-bottom:20px;line-height:1.5">驗證碼已發送至 <b id="csPhoneDisplay" style="color:#3560FF"></b>，請在 5 分鐘內輸入。</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px" id="csOtpBoxes">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,0)">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,1)">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,2)">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,3)">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,4)">
+          <input type="tel" maxlength="1" style="width:48px;height:56px;border:1.5px solid #EDEFF3;border-radius:10px;text-align:center;font-size:24px;font-weight:600;outline:none;font-family:monospace" oninput="csOtpInput(this,5)">
+        </div>
+        <div style="font-size:12px;color:#9B9BAA;text-align:center;margin-bottom:24px">沒收到？<span style="color:#3560FF;cursor:pointer" onclick="alert('已重新發送')">重新發送</span></div>
+        <button onclick="csNextStep(3)" style="width:100%;height:48px;background:#3560FF;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">驗證</button>
+      </div>
+
+      <!-- Step 3: 完成，顯示條碼 -->
+      <div id="csPage3" style="display:none;text-align:center">
+        <div style="font-size:40px;margin-bottom:8px">🎉</div>
+        <div style="font-size:18px;font-weight:600;color:#101119;margin-bottom:4px">載具申請成功！</div>
+        <div style="font-size:13px;color:#737380;margin-bottom:24px">這是你專屬的手機條碼，結帳時出示給店員掃描</div>
+
+        <!-- 條碼卡片 -->
+        <div style="background:#F7F8F9;border-radius:16px;padding:24px 20px;margin-bottom:16px">
+          <div style="font-family:monospace;font-size:20px;font-weight:600;color:#101119;letter-spacing:2px;margin-bottom:16px">/ABC-1234</div>
+          <!-- SVG 條碼 -->
+          <svg viewBox="0 0 200 60" style="width:100%;max-width:220px;height:60px">
+            <rect x="0" y="0" width="200" height="60" fill="#fff" rx="4"/>
+            <!-- 條碼線條 mock -->
+            <g fill="#101119">
+              <rect x="4" y="4" width="2" height="52"/><rect x="8" y="4" width="4" height="52"/>
+              <rect x="14" y="4" width="1" height="52"/><rect x="17" y="4" width="3" height="52"/>
+              <rect x="22" y="4" width="2" height="52"/><rect x="26" y="4" width="1" height="52"/>
+              <rect x="29" y="4" width="4" height="52"/><rect x="35" y="4" width="2" height="52"/>
+              <rect x="39" y="4" width="1" height="52"/><rect x="42" y="4" width="3" height="52"/>
+              <rect x="47" y="4" width="2" height="52"/><rect x="51" y="4" width="4" height="52"/>
+              <rect x="57" y="4" width="1" height="52"/><rect x="60" y="4" width="2" height="52"/>
+              <rect x="64" y="4" width="3" height="52"/><rect x="69" y="4" width="1" height="52"/>
+              <rect x="72" y="4" width="4" height="52"/><rect x="78" y="4" width="2" height="52"/>
+              <rect x="82" y="4" width="1" height="52"/><rect x="85" y="4" width="3" height="52"/>
+              <rect x="90" y="4" width="2" height="52"/><rect x="94" y="4" width="4" height="52"/>
+              <rect x="100" y="4" width="1" height="52"/><rect x="103" y="4" width="2" height="52"/>
+              <rect x="107" y="4" width="3" height="52"/><rect x="112" y="4" width="2" height="52"/>
+              <rect x="116" y="4" width="4" height="52"/><rect x="122" y="4" width="1" height="52"/>
+              <rect x="125" y="4" width="3" height="52"/><rect x="130" y="4" width="2" height="52"/>
+              <rect x="134" y="4" width="1" height="52"/><rect x="137" y="4" width="4" height="52"/>
+              <rect x="143" y="4" width="2" height="52"/><rect x="147" y="4" width="1" height="52"/>
+              <rect x="150" y="4" width="3" height="52"/><rect x="155" y="4" width="2" height="52"/>
+              <rect x="159" y="4" width="4" height="52"/><rect x="165" y="4" width="1" height="52"/>
+              <rect x="168" y="4" width="2" height="52"/><rect x="172" y="4" width="3" height="52"/>
+              <rect x="177" y="4" width="1" height="52"/><rect x="180" y="4" width="4" height="52"/>
+              <rect x="186" y="4" width="2" height="52"/><rect x="190" y="4" width="3" height="52"/>
+              <rect x="195" y="4" width="2" height="52"/>
+            </g>
+          </svg>
+          <div style="font-size:11px;color:#9B9BAA;margin-top:10px">結帳時讓店員掃描此條碼</div>
+        </div>
+
+        <!-- 中獎機率提示 -->
+        <div style="background:#FFF1CD;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:24px;text-align:left">
+          <div style="font-size:24px">🏆</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:#9C6A05">中獎機率已提升 3 倍！</div>
+            <div style="font-size:12px;color:#9C6A05;margin-top:2px">你的每張發票現在都會自動存入並參加雲端發票獎</div>
+          </div>
+        </div>
+
+        <button onclick="csComplete()" style="width:100%;height:48px;background:#3560FF;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">完成，回到首頁</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showCarrierSetup() {
+  const modal = document.getElementById('carrierSetupModal');
+  modal.style.display = 'flex';
+  // 點背景關閉
+  modal.onclick = function(e) { if (e.target === modal) hideCarrierSetup(); };
+}
+function hideCarrierSetup() {
+  document.getElementById('carrierSetupModal').style.display = 'none';
+}
+function csValidatePhone() {
+  const val = document.getElementById('csPhone').value.replace(/\D/g,'');
+  const btn = document.getElementById('csBtn1');
+  if (val.length >= 10) {
+    btn.disabled = false;
+    btn.style.background = '#3560FF';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#BBBBC8';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+function csNextStep(step) {
+  document.getElementById('csPage1').style.display = 'none';
+  document.getElementById('csPage2').style.display = 'none';
+  document.getElementById('csPage3').style.display = 'none';
+  document.getElementById('csDot1').style.background = '#EDEFF3';
+  document.getElementById('csDot2').style.background = '#EDEFF3';
+  document.getElementById('csDot3').style.background = '#EDEFF3';
+  if (step === 2) {
+    document.getElementById('csPage2').style.display = 'block';
+    document.getElementById('csDot1').style.background = '#3560FF';
+    document.getElementById('csDot2').style.background = '#3560FF';
+    const phone = document.getElementById('csPhone').value;
+    document.getElementById('csPhoneDisplay').textContent = phone;
+    document.getElementById('csOtpBoxes').querySelectorAll('input')[0].focus();
+  } else if (step === 3) {
+    document.getElementById('csPage3').style.display = 'block';
+    document.getElementById('csDot1').style.background = '#3560FF';
+    document.getElementById('csDot2').style.background = '#3560FF';
+    document.getElementById('csDot3').style.background = '#3560FF';
+  }
+}
+function csOtpInput(el, idx) {
+  if (el.value.length === 1) {
+    const boxes = document.getElementById('csOtpBoxes').querySelectorAll('input');
+    if (idx < 5) boxes[idx+1].focus();
+    // 6碼填完自動進入下一步
+    const filled = Array.from(boxes).every(b => b.value.length === 1);
+    if (filled) setTimeout(() => csNextStep(3), 300);
+  }
+}
+function csComplete() {
+  hideCarrierSetup();
+  const unset = document.getElementById('carrierUnset');
+  const set = document.getElementById('carrierSet');
+  if (unset) unset.style.display = 'none';
+  if (set) set.style.display = 'block';
+}
+
+function showBarcodeFullscreen() {
+  document.getElementById('barcodeFullscreen').style.display = 'flex';
+  // 嘗試調高螢幕亮度（web 無法直接控制，但可提示）
+}
+function hideBarcodeFullscreen() {
+  document.getElementById('barcodeFullscreen').style.display = 'none';
+}
+</script>
+</body>
+</html>
